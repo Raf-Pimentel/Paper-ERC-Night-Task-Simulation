@@ -15,6 +15,44 @@ Key Contributions
     Sim-to-Real Pipeline: A scalable framework for testing autonomous vision systems in space exploration contexts where physical testing is logistically constrained.
 
 ## Repository Structure
+.
+├── luminosity_test_results.csv
+├── night_task_results.csv
+├── performance_results.csv
+└── src
+    └── uwb_erc_sim
+        ├── CMakeLists.txt
+        ├── include
+        │   └── uwb_erc_sim
+        ├── launch
+        │   └── simulation.launch.py
+        ├── models
+        │   ├── aruco_marker
+        │   │   └── materials
+        │   │       └── textures
+        │   │           └── marker.png
+        │   └── aruco_target
+        │       ├── materials
+        │       │   └── textures
+        │       │       └── aruco_marker.png
+        │       ├── model.config
+        │       └── model.sdf
+        ├── package.xml
+        ├── scripts
+        │   ├── aruco_detector.py
+        │   ├── erc_vision_eval.py
+        │   ├── experiment_automator.py
+        │   ├── fly_square.py
+        │   ├── intensity_sweeper.py
+        │   └── vision_node.py
+        ├── setup.py
+        ├── src
+        ├── urdf
+        │   └── d435i.urdf
+        └── worlds
+            ├── night_task.sdf
+            └── standard.sdf
+
 (Working on it)
 
 ## System Overview
