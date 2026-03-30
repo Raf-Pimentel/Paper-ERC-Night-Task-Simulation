@@ -171,6 +171,7 @@ python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ## Acknowledgments
 
 This research was conducted as part of the visiting researcher program at the University of West Bohemia (UWB), collaborating with the UWB Robotics Team and Professor Tomas Broum.
-License
+
+# License
 
 This software is provided "as is" under the MIT License. For full details, see the LICENSE file.
