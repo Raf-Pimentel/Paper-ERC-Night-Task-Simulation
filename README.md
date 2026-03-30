@@ -1,9 +1,11 @@
-Enhancing Night-Task Navigation for Competition Rovers: A Comparative Study of Gazebo Simulations and Sensor Performance
+# Enhancing Night-Task Navigation for Competition Rovers: A Comparative Study of Gazebo Simulations and Sensor Performance
 
 This repository contains the simulation environments, ROS2 nodes, and experimental data associated with the research paper titled "Enhancing Night-Task Navigation for Competition Rovers: A Comparative Study of Gazebo Simulations and Sensor Performance," developed for the Artificial Life and Robotics journal.
 Abstract
 
 The European Rover Challenge (ERC) introduces significant operational constraints for autonomous navigation, most notably the "Night Task," which requires reliable perception in near-zero lux environments. This work presents a "Simulation-to-Real" methodology to evaluate and improve the detection of ArUco markers under extreme low-light conditions. Utilizing the ROS2 Jazzy framework and Gazebo (Harmonic), we simulated a mobile rover equipped with an Intel RealSense D435i depth camera and a synchronized spotlight. We measured performance through Detection Success Rate and Pose Estimation Error, validating virtual results against physical experiments conducted at the University of West Bohemia (UWB) workshop.
+This research was conducted as part of the visiting research program at the University of West Bohemia (UWB), collaborating with the UWB Robotics Team and Professor Tomas Broum.
+
 Key Contributions
 
     Validated Sensor Profile: A Gazebo-Harmonic sensor profile optimized for low-light ArUco detection.
@@ -12,7 +14,7 @@ Key Contributions
 
     Sim-to-Real Pipeline: A scalable framework for testing autonomous vision systems in space exploration contexts where physical testing is logistically constrained.
 
-Repository Structure
+## Repository Structure
 Plaintext
 
 ├── docs/               # Documentation and paper drafts
@@ -25,7 +27,7 @@ Plaintext
 ├── data/               # Recorded bag files and experimental logs
 └── LICENSE             # MIT License
 
-System Overview
+## System Overview
 Hardware
 
     Camera: Intel RealSense D435i (Global shutter and IR capabilities).
@@ -44,7 +46,7 @@ Software Stack
 
     Vision: OpenCV-based ArUco detection pipeline.
 
-Methodology & Metrics
+## Methodology & Metrics
 
 The performance of the system is evaluated across two primary metrics:
 
@@ -52,7 +54,7 @@ The performance of the system is evaluated across two primary metrics:
 
     Pose Estimation Error: The mathematical difference (Translation Δx,Δy,Δz and Rotation variance) between the actual marker position and the position estimated by the camera.
 
-Getting Started
+## Getting Started
 
     Clone the Repository:
     Bash
@@ -71,7 +73,7 @@ Getting Started
 
     ros2 launch rover_description simulation.launch.py
 
-Acknowledgments
+## Acknowledgments
 
 This research was conducted as part of the visiting researcher program at the University of West Bohemia (UWB), collaborating with the UWB Robotics Team and Professor Tomas Broum.
 License
