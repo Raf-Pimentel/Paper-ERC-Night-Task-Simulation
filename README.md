@@ -115,7 +115,9 @@ Bash
 
 ``
 docker exec -it <CONTAINER_ID> bash
+
 cd /ros2_ws
+
 source /opt/ros/jazzy/setup.bash
 ``
 
