@@ -47,15 +47,33 @@ The performance of the system is evaluated across two primary metrics:
 ## Running the Simulation (Docker)
 
 Since this environment runs within a Docker container, follow these steps to initialize the simulation, the ROS2 bridge, and the experimental scripts across four terminal tabs.
-1. Start the Container
+0. Cloning repository and Giving Permissions:
+Clone the repository:
+Bash
+git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
+
+(In your host machine) Ensure you gave all the due permissions with:
+
+Bash
+xhost +local:root
+
+[comment]: <You should see something like: "non-network local connections being added to access control list">
+
+### 1. Start the Container
 
 First, ensure your container is running and identify its ID:
 Bash
 
-docker ps
-(Note the <CONTAINER_ID>)
+docker ps -a
 
-2. Terminal 1: Launch Gazebo Harmonic
+[//]: < Look at the CONTAINER_ID>
+
+Bash
+docker start <CONTAINER_ID>
+
+[//]: <For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it [CONTAINER_ID] bash>
+
+### Terminal 1: Launch Gazebo Harmonic
 
 Enter the container, export the Gazebo resource paths, and launch the "Night Task" world:
 Bash
@@ -67,7 +85,7 @@ export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PA
 
 gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
 
-3. Terminal 2: ROS-Gazebo Bridge
+### Terminal 2: ROS-Gazebo Bridge
 
 Open a new tab to bridge the communication between Gazebo and ROS2 Jazzy:
 Bash
@@ -80,7 +98,7 @@ ros2 run ros_gz_bridge parameter_bridge \
     /camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image \
     /model/aruco_target/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist
 
-4. Terminal 3: Movement Script
+### 4. Terminal 3: Movement Script
 
 Open a third tab to execute the ArUco marker trajectory:
 Bash
@@ -89,7 +107,7 @@ docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
 
-5. Terminal 4: Vision Evaluation
+### 5. Terminal 4: Vision Evaluation
 
 Open a fourth tab to run the automated detection and pose estimation analysis:
 Bash
