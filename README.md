@@ -57,28 +57,26 @@ git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
 ``` Bash
 xhost +local:root
 ```
-[comment]: <You should see something like: "non-network local connections being added to access control list">
+You should see something like: "non-network local connections being added to access control list"
 
 ### 1. Start the Container
 
 First, ensure your container is running and identify its ID:
-Bash
+
 ```
 docker ps -a
 ```
-[//]: < Look at the CONTAINER_ID>
+Look at the CONTAINER_ID
 
-Bash
 ```
 docker start <CONTAINER_ID>
 ```
-[//]: <For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it [CONTAINER_ID] bash>
+For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it <CONTAINER_ID> bash
 
 
 ### Terminal 1: Launch Gazebo Harmonic
 
 Enter the container, export the Gazebo resource paths, and launch the "Night Task" world:
-Bash
 
 ```
 docker exec -it <CONTAINER_ID> bash
@@ -92,9 +90,8 @@ gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
 ### Terminal 2: ROS-Gazebo Bridge
 
 Open a new tab to bridge the communication between Gazebo and ROS2 Jazzy:
-Bash
 
-```
+```Bash
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
@@ -127,7 +124,9 @@ source /opt/ros/jazzy/setup.bash
 ```
 
 # Note: This script is currently under development
+```
 python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
+```
 
 ## Acknowledgments
 
