@@ -98,7 +98,7 @@ ros2 run ros_gz_bridge parameter_bridge \
     /camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image \
     /model/aruco_target/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist
 
-### 4. Terminal 3: Movement Script
+### Terminal 3: Movement Script
 
 Open a third tab to execute the ArUco marker trajectory:
 Bash
@@ -107,7 +107,7 @@ docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
 
-### 5. Terminal 4: Vision Evaluation
+### Terminal 4: Vision Evaluation
 
 Open a fourth tab to run the automated detection and pose estimation analysis:
 Bash
