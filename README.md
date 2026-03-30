@@ -102,22 +102,22 @@ ros2 run ros_gz_bridge parameter_bridge \
 
 Open a third tab to execute the ArUco marker trajectory:
 
-'''
+``
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
-'''
+``
 
 ### Terminal 4: Vision Evaluation
 
 Open a fourth tab to run the automated detection and pose estimation analysis:
 Bash
 
+``
 docker exec -it <CONTAINER_ID> bash
-
 cd /ros2_ws
-
 source /opt/ros/jazzy/setup.bash
+``
 
 # Note: This script is currently under development
 python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
