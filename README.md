@@ -117,10 +117,9 @@ Bash
 
 ```
 docker exec -it <CONTAINER_ID> bash
-
 cd /ros2_ws
-
 source /opt/ros/jazzy/setup.bash
+python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ```
 
 # Note: This script is currently under development
