@@ -15,17 +15,7 @@ Key Contributions
     Sim-to-Real Pipeline: A scalable framework for testing autonomous vision systems in space exploration contexts where physical testing is logistically constrained.
 
 ## Repository Structure
-Plaintext
-
-├── docs/               # Documentation and paper drafts
-├── simulation/         # Gazebo Harmonic worlds and models
-├── ros2_ws/            # ROS2 workspace (Jazzy/Humble/Iron)
-│   ├── src/
-│   │   ├── rover_description/   # URDF/Xacro for the D435i and spotlight
-│   │   ├── perception_nodes/    # OpenCV detection and thresholding logic
-│   │   └── data_logger/         # Nodes for recording detection metrics
-├── data/               # Recorded bag files and experimental logs
-└── LICENSE             # MIT License
+(Working on it)
 
 ## System Overview
 Hardware
