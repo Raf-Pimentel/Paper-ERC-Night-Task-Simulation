@@ -44,24 +44,62 @@ The performance of the system is evaluated across two primary metrics:
 
     Pose Estimation Error: The mathematical difference (Translation Δx,Δy,Δz and Rotation variance) between the actual marker position and the position estimated by the camera.
 
-## Getting Started
+## Running the Simulation (Docker)
 
-    Clone the Repository:
-    Bash
+Since this environment runs within a Docker container, follow these steps to initialize the simulation, the ROS2 bridge, and the experimental scripts across four terminal tabs.
+1. Start the Container
 
-    git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
+First, ensure your container is running and identify its ID:
+Bash
 
-    Install Dependencies: Ensure you have ROS2 and Gazebo Harmonic installed.
+docker ps
+(Note the <CONTAINER_ID>)
 
-    Build the Workspace:
-    Bash
+2. Terminal 1: Launch Gazebo Harmonic
 
-    cd ros2_ws && colcon build
+Enter the container, export the Gazebo resource paths, and launch the "Night Task" world:
+Bash
 
-    Launch Simulation:
-    Bash
+docker exec -it <CONTAINER_ID> bash
+cd /ros2_ws
+export GZ_SIM_SYSTEM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gz-sim-8/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
+export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PATH}
 
-    ros2 launch rover_description simulation.launch.py
+gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
+
+3. Terminal 2: ROS-Gazebo Bridge
+
+Open a new tab to bridge the communication between Gazebo and ROS2 Jazzy:
+Bash
+
+docker exec -it <CONTAINER_ID> bash
+cd /ros2_ws
+source /opt/ros/jazzy/setup.bash
+
+ros2 run ros_gz_bridge parameter_bridge \
+    /camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image \
+    /model/aruco_target/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist
+
+4. Terminal 3: Movement Script
+
+Open a third tab to execute the ArUco marker trajectory:
+Bash
+
+docker exec -it <CONTAINER_ID> bash
+cd /ros2_ws
+python3 src/uwb_erc_sim/scripts/fly_square.py
+
+5. Terminal 4: Vision Evaluation
+
+Open a fourth tab to run the automated detection and pose estimation analysis:
+Bash
+
+docker exec -it <CONTAINER_ID> bash
+cd /ros2_ws
+source /opt/ros/jazzy/setup.bash
+
+# Note: This script is currently under development
+python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 
 ## Acknowledgments
 
