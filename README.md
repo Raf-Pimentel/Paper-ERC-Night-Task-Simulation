@@ -54,9 +54,9 @@ git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
 ```
 (In your host machine) Ensure you gave all the due permissions with:
 
-Bash
+``` Bash
 xhost +local:root
-
+```
 [comment]: <You should see something like: "non-network local connections being added to access control list">
 
 ### 1. Start the Container
