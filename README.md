@@ -86,12 +86,12 @@ export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PA
 
 gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
 ```
-- Make sure that after your gazebo window opened, you press the "play" button to start the simulation
+- You should see the gazebo window in a dark scenario, with a spolight, a green pyramid and the ArUco marker image.
+- Make sure that after your gazebo window opened, you press the "play" button to start the simulation.
 - Also in the gazebo window, click in the three dots in the top-right and select "Image Display", you should see the POV of the camera live.
 
 
 ### Terminal 2: ROS-Gazebo Bridge
-
 Open a new tab to bridge the communication between Gazebo and ROS2 Jazzy:
 
 ```Bash
