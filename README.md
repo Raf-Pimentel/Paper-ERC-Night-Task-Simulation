@@ -15,7 +15,7 @@ Key Contributions
     Sim-to-Real Pipeline: A scalable framework for testing autonomous vision systems in space exploration contexts where physical testing is logistically constrained.
 
 ## Repository Structure
-.
+``` Bash
 ├── luminosity_test_results.csv
 ├── night_task_results.csv
 ├── performance_results.csv
@@ -52,7 +52,7 @@ Key Contributions
         └── worlds
             ├── night_task.sdf
             └── standard.sdf
-
+```
 (Working on it)
 
 ## System Overview
