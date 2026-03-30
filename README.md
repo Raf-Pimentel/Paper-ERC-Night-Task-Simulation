@@ -87,7 +87,7 @@ export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PA
 gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
 ```
 - Make sure that after your gazebo window opened, you press the "play" button to start the simulation
-- Also in the gazebo window, click in the tre dots in the top-right and select "Image Display", you should see the POV of the camera live.
+- Also in the gazebo window, click in the three dots in the top-right and select "Image Display", you should see the POV of the camera live.
 
 
 ### Terminal 2: ROS-Gazebo Bridge
