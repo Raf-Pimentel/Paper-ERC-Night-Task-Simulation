@@ -63,7 +63,7 @@ xhost +local:root
 
 First, ensure your container is running and identify its ID:
 Bash
-
+```
 docker ps -a
 
 [//]: < Look at the CONTAINER_ID>
@@ -72,24 +72,28 @@ Bash
 docker start <CONTAINER_ID>
 
 [//]: <For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it [CONTAINER_ID] bash>
+```
 
 ### Terminal 1: Launch Gazebo Harmonic
 
 Enter the container, export the Gazebo resource paths, and launch the "Night Task" world:
 Bash
 
+```
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 export GZ_SIM_SYSTEM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gz-sim-8/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
 export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PATH}
 
 gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
+```
 
 ### Terminal 2: ROS-Gazebo Bridge
 
 Open a new tab to bridge the communication between Gazebo and ROS2 Jazzy:
 Bash
 
+```
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
@@ -97,7 +101,7 @@ source /opt/ros/jazzy/setup.bash
 ros2 run ros_gz_bridge parameter_bridge \
     /camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image \
     /model/aruco_target/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist
-
+```
 ### Terminal 3: Movement Script
 
 Open a third tab to execute the ArUco marker trajectory:
