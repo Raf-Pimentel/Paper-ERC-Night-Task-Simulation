@@ -102,7 +102,7 @@ ros2 run ros_gz_bridge parameter_bridge \
 
 Open a third tab to execute the ArUco marker trajectory:
 
-''' Bash
+'''
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
