@@ -49,9 +49,9 @@ The performance of the system is evaluated across two primary metrics:
 Since this environment runs within a Docker container, follow these steps to initialize the simulation, the ROS2 bridge, and the experimental scripts across four terminal tabs.
 0. Cloning repository and Giving Permissions:
 Clone the repository:
-Bash
+``` Bash
 git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
-
+```
 (In your host machine) Ensure you gave all the due permissions with:
 
 Bash
@@ -65,14 +65,15 @@ First, ensure your container is running and identify its ID:
 Bash
 ```
 docker ps -a
-
+```
 [//]: < Look at the CONTAINER_ID>
 
 Bash
-docker start <CONTAINER_ID>
-
-[//]: <For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it [CONTAINER_ID] bash>
 ```
+docker start <CONTAINER_ID>
+```
+[//]: <For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it [CONTAINER_ID] bash>
+
 
 ### Terminal 1: Launch Gazebo Harmonic
 
