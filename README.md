@@ -63,12 +63,12 @@ You should see something like: "non-network local connections being added to acc
 
 First, ensure your container is running and identify its ID:
 
-```
+```Bash
 docker ps -a
 ```
 Look at the CONTAINER_ID
 
-```
+``` Bash
 docker start <CONTAINER_ID>
 ```
 For all the other terminals that you will run the docker environment simultaneously, you use the command: docker exec -it <CONTAINER_ID> bash
@@ -78,7 +78,7 @@ For all the other terminals that you will run the docker environment simultaneou
 
 Enter the container, export the Gazebo resource paths, and launch the "Night Task" world:
 
-```
+``` Bash
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 export GZ_SIM_SYSTEM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gz-sim-8/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
@@ -107,7 +107,7 @@ ros2 run ros_gz_bridge parameter_bridge \
 
 Open a third tab to execute the ArUco marker trajectory:
 
-```
+``` Bash
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
@@ -118,7 +118,7 @@ python3 src/uwb_erc_sim/scripts/fly_square.py
 Open a fourth tab to run the automated detection and pose estimation analysis:
 Bash
 
-```
+``` Bash
 docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
@@ -126,7 +126,7 @@ python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ```
 
 # Note: This script is currently under development
-```
+``` Bash
 python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ```
 
