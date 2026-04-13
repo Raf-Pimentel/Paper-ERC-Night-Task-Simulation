@@ -180,6 +180,13 @@ cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
 python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ```
+* The erc_vision_eval.py accepts a --scenario flag and tags every CSV row with the scenario name and target lux, making it easy to merge results across runs for comparison.
+Select the scenario matching the world you launched:
+```
+python3 src/uwb_erc_sim/scripts/erc_vision_eval.py --scenario 19h
+python3 src/uwb_erc_sim/scripts/erc_vision_eval.py --scenario 21h
+python3 src/uwb_erc_sim/scripts/erc_vision_eval.py --scenario midnight
+```
 
 # Note: This script is currently under development
 ``` Bash
