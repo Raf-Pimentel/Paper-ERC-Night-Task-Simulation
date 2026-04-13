@@ -126,7 +126,7 @@ export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PA
 
 
 #### Launching a scenario:
-Replace the world file path in Terminal 1 to switch between scenarios. Everything else in the four-terminal workflow is unchanged.
+Replace the world file path in Terminal 1 to switch between scenarios.
 
 Twilight 19:00 — 3.0 lx
 ```
