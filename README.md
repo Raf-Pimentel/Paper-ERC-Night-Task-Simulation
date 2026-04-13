@@ -1,4 +1,5 @@
 # Enhancing Night-Task Navigation for Competition Rovers: A Comparative Study of Gazebo Simulations and Sensor Performance
+Some more detailed explanation:[Docs](https://docs.google.com/document/d/1aZhX8T2QJ3hH65VPwwKCBMxovXjShG7vIbJGwNSziSs/edit?usp=sharing)
 
 This repository contains the simulation environments, ROS2 nodes, and experimental data associated with the research paper titled "Enhancing Night-Task Navigation for Competition Rovers: A Comparative Study of Gazebo Simulations and Sensor Performance," developed for the Artificial Life and Robotics journal.
 Abstract
@@ -154,7 +155,6 @@ python3 src/uwb_erc_sim/scripts/fly_square.py
 ### Terminal 4: Vision Evaluation
 
 Open a fourth tab to run the automated detection and pose estimation analysis:
-Bash
 
 ``` Bash
 docker exec -it <CONTAINER_ID> bash
@@ -171,6 +171,7 @@ python3 src/uwb_erc_sim/scripts/erc_vision_eval.py
 ## Acknowledgments
 
 This research was conducted as part of the visiting researcher program at the University of West Bohemia (UWB), collaborating with the UWB Robotics Team and Professor Tomas Broum.
-License
+
+# License
 
 This software is provided "as is" under the MIT License. For full details, see the LICENSE file.
