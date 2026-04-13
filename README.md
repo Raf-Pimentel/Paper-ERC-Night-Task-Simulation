@@ -122,9 +122,27 @@ docker exec -it <CONTAINER_ID> bash
 cd /ros2_ws
 export GZ_SIM_SYSTEM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gz-sim-8/plugins:${GZ_SIM_SYSTEM_PLUGIN_PATH}
 export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PATH}
-
-gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task.sdf
 ```
+
+
+#### Launching a scenario:
+Replace the world file path in Terminal 1 to switch between scenarios. Everything else in the four-terminal workflow is unchanged.
+
+Twilight 19:00 — 3.0 lx
+```
+gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_19h.sdf
+```
+
+Evening 21:00 — 0.3 lx
+```
+gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_21h.sdf
+```
+
+Midnight 00:00 — 0.1 lx
+```
+gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_midnight.sdf
+```
+
 - You should see the gazebo window in a dark scenario, with a spolight, a green pyramid and the ArUco marker image.
 - Make sure that after your gazebo window opened, you press the "play" button to start the simulation.
 - Also in the gazebo window, click in the three dots in the top-right and select "Image Display", you should see the POV of the camera live.
