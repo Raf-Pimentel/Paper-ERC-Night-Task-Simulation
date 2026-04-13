@@ -1,0 +1,133 @@
+<?xml version="1.0" ?>
+<!--
+  night_task_midnight.sdf  —  ERC Night Task: Midnight 00:00 scenario
+  ============================================================
+  Target illuminance : 0.1 lx  (from UWB workshop measurement)
+  Sun diffuse        : 0.005  (directional, constant — no attenuation)
+  Scene ambient      : 0.003
+  
+  Light model:
+    I_total(d) = I_spotlight(d) + I_sun
+    I_sun      = CONSTANT (directional light, distance-independent)
+    I_spotlight(d) = I0 / (Kc + Kl*d + Kq*d^2)
+      Kc=0.2, Kl=0.05, Kq=0.01  (first-iteration defaults)
+  
+  Calibration: run light_calibration.py --target-lux 0.1
+  to validate and fine-tune <diffuse> against the physical lux meter.
+-->
+<sdf version="1.10">
+  <world name="night_task_midnight">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.003 0.003 0.003 1</ambient>
+      <background>0.01 0.01 0.01 1</background>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
+    </scene>
+
+    <!--
+      I_SUN — directional light (constant, no attenuation).
+      Target: 0.1 lx  →  diffuse 0.005
+      Calibrated from UWB workshop measurements (April 2026).
+      To recalibrate: adjust <diffuse> r=g=b until light_calibration.py
+      reports Estimated_Lux ≈ 0.1 with --target-lux 0.1.
+    -->
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.005 0.005 0.005 1</diffuse>
+      <specular>0.0015 0.0015 0.0015 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!--
+      OBSERVER RIG: D435i Camera + Spotlight
+      Camera world pose : (0, 0, 1.0)  — 1 m above ground
+      Spotlight offset  : (0, 0, 0.5)  — 0.5 m above camera → world (0, 0, 1.5 m)
+    -->
+    <model name="observer_rig">
+      <static>true</static>
+      <pose>0 0 1.0 0 0 0</pose>
+
+      <link name="camera_link">
+
+        <!-- Intel RealSense D435i Color Camera (69° H-FOV, 1920×1080, 30 Hz) -->
+        <sensor name="d435i_color" type="camera">
+          <pose>0 0 0 0 0 0</pose>
+          <camera>
+            <horizontal_fov>1.204</horizontal_fov>
+            <image>
+              <width>1920</width>
+              <height>1080</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip><near>0.1</near><far>100.0</far></clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <visualize>true</visualize>
+          <topic>/camera/image_raw</topic>
+        </sensor>
+
+        <!--
+          SPOTLIGHT — 0.5 m above camera (Z+0.5 relative to rig)
+          Direction: +X (toward ArUco target)
+          Attenuation: I(d) = 1/(0.2 + 0.05*d + 0.01*d^2)
+            d=2m → 2.94×  |  d=5m → 1.43×  |  d=10m → 0.77×
+        -->
+        <light name="rover_spotlight" type="spot">
+          <pose>0 0 0.5 0 0 0</pose>
+          <direction>1 0 0</direction>
+          <cast_shadows>true</cast_shadows>
+          <diffuse>0.9 0.9 0.9 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <attenuation>
+            <range>25.0</range>
+            <constant>0.2</constant>
+            <linear>0.05</linear>
+            <quadratic>0.01</quadratic>
+          </attenuation>
+          <spot>
+            <inner_angle>0.4</inner_angle>
+            <outer_angle>1.2</outer_angle>
+            <falloff>1.0</falloff>
+          </spot>
+        </light>
+
+      </link>
+    </model>
+
+    <!-- Ground plane (dark surface — no reflective floor for Night Task) -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <ambient>0.05 0.05 0.05 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+            <specular>0.01 0.01 0.01 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://aruco_target</uri>
+    </include>
+
+  </world>
+</sdf>
