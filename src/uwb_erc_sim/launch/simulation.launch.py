@@ -12,11 +12,14 @@ def generate_launch_description():
     gz_vendor_lib = "/opt/ros/jazzy/opt/gz_sim_vendor/lib"
     gz_vendor_plugins = "/opt/ros/jazzy/opt/gz_sim_vendor/lib/gz-sim-8/plugins"
 
+    models_dir = os.path.join(pkg_share, 'models')
+
     return LaunchDescription([
         # 1. Fix the Plugin Loading Error
         SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', f"{gz_vendor_plugins}:{gz_vendor_lib}"),
         SetEnvironmentVariable('LD_LIBRARY_PATH', f"{gz_vendor_lib}:{os.environ.get('LD_LIBRARY_PATH', '')}"),
-        
+        SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', f"{models_dir}:{os.environ.get('GZ_SIM_RESOURCE_PATH', '')}"),
+
         # 2. Fix the Dell G15 / NVIDIA Display Error
         SetEnvironmentVariable('__NV_PRIME_RENDER_OFFLOAD', '1'),
         SetEnvironmentVariable('__GLX_VENDOR_LIBRARY_NAME', 'nvidia'),
