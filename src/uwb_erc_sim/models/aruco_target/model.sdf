@@ -18,7 +18,7 @@
           <emissive>0.0 0.0 0.0 1</emissive>
           <pbr>
             <metal>
-              <albedo_map>model://aruco_target/materials/textures/NewArUco.png</albedo_map>
+              <albedo_map>/ros2_ws/src/uwb_erc_sim/models/aruco_target/materials/textures/NewArUco.png</albedo_map>
               <metalness>0.0</metalness>
               <roughness>1.0</roughness>
             </metal>
