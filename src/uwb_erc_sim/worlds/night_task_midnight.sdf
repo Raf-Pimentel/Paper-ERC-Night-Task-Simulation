@@ -126,7 +126,7 @@
     </model>
 
     <include>
-      <uri>model://aruco_target</uri>
+      <uri>/ros2_ws/src/uwb_erc_sim/models/aruco_target</uri>
     </include>
 
   </world>
