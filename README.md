@@ -92,6 +92,24 @@ The performance of the system is evaluated across two primary metrics:
 - **Detection Success Rate:** The ratio of frames where the ArUco marker was successfully identified by `detectMarkers` over the total frames in a 30-second trajectory.
 - **Pose Estimation Error:** The mathematical difference (Translation Δx, Δy, Δz and Rotation variance) between the actual marker position and the position estimated by the camera.
 
+### Simulation Results (Gazebo)
+
+Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Two runs were performed per lighting condition:
+
+| Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
+|---|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | run1 | 92.3% | +1.249 m |
+| Twilight 19:00 | 3.0 lx | run2 | 88.4% | +1.292 m |
+| Evening 21:00  | 0.3 lx | run1 | 84.2% | +1.268 m |
+| Evening 21:00  | 0.3 lx | run2 | 97.7% | +1.372 m |
+| Midnight 00:00 | 0.1 lx | run1 | 99.5% | +1.390 m |
+| Midnight 00:00 | 0.1 lx | run2 | 98.3% | +1.389 m |
+
+**Reliability note:**
+- **Detection rate is the primary reliable metric** from these recordings. It depends only on whether OpenCV finds the marker corners and is not affected by camera intrinsic accuracy.
+- **Pose estimation error has known limitations** in this dataset: (1) intrinsics are scaled from the 1920×1080 sensor spec down to the screencast resolution (~452×255), introducing a systematic depth bias; (2) the ground-truth reference is fixed at the marker's initial world position (2.0, 0.0, 1.0 m) while the marker moves during the trajectory, so reported errors reflect both estimation bias and actual displacement. For a quantitative sim-to-real pose comparison, recordings should be taken directly from the `/camera/image_raw` ROS topic at full 1920×1080 resolution.
+- The high variance in the 21h detection rate (84.2% vs 97.7% across runs) is under investigation and likely relates to camera angle or simulation non-determinism.
+
 ---
 
 ## Running the Simulation (Docker)
