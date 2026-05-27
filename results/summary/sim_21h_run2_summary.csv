@@ -1,0 +1,2 @@
+scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Evening 21:00,0.3,959,937,97.71,1.3717,0.72126,-0.32204,0.45814,-1.31341,0.48512,6.09,recordings/sim_21h_run2.mp4

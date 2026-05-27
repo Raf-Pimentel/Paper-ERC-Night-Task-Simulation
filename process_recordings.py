@@ -82,7 +82,10 @@ DIST_COEFFS = np.zeros((4, 1), dtype=np.float64)
 
 # ArUco setup — DICT_7X7_50 to match the simulation model
 ARUCO_DICT   = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_7X7_50)
-ARUCO_PARAMS = cv2.aruco.DetectorParameters()
+# DetectorParameters_create() required for OpenCV < 4.7; DetectorParameters() segfaults in 4.6.x
+ARUCO_PARAMS = (cv2.aruco.DetectorParameters_create()
+                if hasattr(cv2.aruco, "DetectorParameters_create")
+                else cv2.aruco.DetectorParameters())
 
 # Output directory structure
 RESULTS_DIR  = Path("results")
