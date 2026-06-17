@@ -102,7 +102,16 @@ The performance of the system is evaluated across two primary metrics:
 
 ### Simulation Results (Gazebo)
 
-Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Three runs were performed per lighting condition:
+Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Three runs were performed per lighting condition; the table reports mean ± standard deviation across runs.
+
+| Scenario | Target Lux | Detection Rate | Mean Depth Error |
+|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | 91.7% ± 7.4% | +1.334 ± 0.050 m |
+| Evening 21:00  | 0.3 lx | 93.6% ± 3.8% | +1.388 ± 0.015 m |
+| Midnight 00:00 | 0.1 lx | 84.3% ± 8.3% | +1.262 ± 0.083 m |
+
+<details>
+<summary>Per-run breakdown</summary>
 
 | Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
@@ -115,6 +124,8 @@ Results were obtained by processing screen recordings of each scenario with `pro
 | Midnight 00:00 | 0.1 lx | run1 | 77.6% | +1.191 m |
 | Midnight 00:00 | 0.1 lx | run2 | 95.9% | +1.378 m |
 | Midnight 00:00 | 0.1 lx | run3 | 79.3% | +1.218 m |
+
+</details>
 
 **Reliability note:**
 - **Detection rate is the primary reliable metric** from these recordings. It depends only on whether OpenCV finds the marker corners and is not affected by camera intrinsic accuracy.
