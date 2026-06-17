@@ -21,9 +21,17 @@ This research was conducted as part of the visiting research program at the Univ
 ## Repository Structure
 
 ```
-├── luminosity_test_results.csv
-├── night_task_results.csv
-├── performance_results.csv
+├── process_recordings.py          ← processes recordings/*.mp4 into results/
+├── recordings
+│   ├── sim_19h_run1.mp4 .. run3.mp4
+│   ├── sim_21h_run1.mp4 .. run3.mp4
+│   └── sim_midnight_run1.mp4 .. run3.mp4
+├── results
+│   ├── raw
+│   │   └── sim_<scenario>_run<N>_raw.csv       ← one row per frame
+│   └── summary
+│       ├── sim_<scenario>_run<N>_summary.csv   ← aggregated stats per run
+│       └── all_scenarios_summary.csv           ← combined table for the paper
 └── src
     └── uwb_erc_sim
         ├── CMakeLists.txt
