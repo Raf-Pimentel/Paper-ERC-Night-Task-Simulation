@@ -112,15 +112,15 @@ Results were obtained by processing screen recordings of each scenario with `pro
 | Evening 21:00  | 0.3 lx | run1 | 89.4% | +1.371 m |
 | Evening 21:00  | 0.3 lx | run2 | 92.6% | +1.386 m |
 | Evening 21:00  | 0.3 lx | run3 | 98.7% | +1.408 m |
-| Midnight 00:00 | 0.1 lx | run1 | 66.9% | +1.461 m |
-| Midnight 00:00 | 0.1 lx | run2 | 74.3% | +1.216 m |
-| Midnight 00:00 | 0.1 lx | run3 | 81.5% | +1.296 m |
+| Midnight 00:00 | 0.1 lx | run1 | 77.6% | +1.191 m |
+| Midnight 00:00 | 0.1 lx | run2 | 95.9% | +1.378 m |
+| Midnight 00:00 | 0.1 lx | run3 | 79.3% | +1.218 m |
 
 **Reliability note:**
 - **Detection rate is the primary reliable metric** from these recordings. It depends only on whether OpenCV finds the marker corners and is not affected by camera intrinsic accuracy.
 - **Pose estimation error has known limitations** in this dataset: (1) intrinsics are scaled from the 1920×1080 sensor spec down to the screencast resolution (~440×250), introducing a systematic depth bias; (2) the ground-truth reference is fixed at the marker's initial world position (2.0, 0.0, 1.0 m) while the marker moves during the trajectory, so reported errors reflect both estimation bias and actual displacement. For a quantitative sim-to-real pose comparison, recordings should be taken directly from the `/camera/image_raw` ROS topic at full 1920×1080 resolution.
 - Detection rate now scales with target lux as expected (19h ≈ 21h > midnight), with run-to-run spread attributed to the marker shrinking in frame as it moves away during the trajectory — this effect is most pronounced at midnight, where the lowest light margin makes the marker hardest to detect once distant.
-- **Resolved:** the 21h scenario's mean frame brightness (~15.2) was close to midnight's (~15.7) despite higher target lux. Root cause: `night_task_midnight.sdf`'s `<background>` (sky color) was set to 0.01 — brighter than 21h's 0.005 — breaking the 19h > 21h > midnight darkening progression used by every other light parameter in these worlds. Fixed to 0.0016 to restore the progression. Verified by running each world headlessly and sampling native 1920×1080 frames directly from `/camera/image_raw` (bypassing the screencast pipeline entirely): 19h = 44.54, 21h = 13.03, midnight = 6.20 — correctly monotonic post-fix. Detection-rate results above are unaffected since detection doesn't depend on background color, but the midnight recordings should be retaken to get a corrected `mean_brightness` reading from the screencast pipeline too.
+- **Resolved:** the 21h scenario's mean frame brightness (~15.2) was close to midnight's (~15.7) despite higher target lux. Root cause: `night_task_midnight.sdf`'s `<background>` (sky color) was set to 0.01 — brighter than 21h's 0.005 — breaking the 19h > 21h > midnight darkening progression used by every other light parameter in these worlds. Fixed to 0.0016 to restore the progression. Midnight was re-recorded after the fix, and `mean_brightness` in the screencast pipeline now confirms it: 19h ≈ 44.2, 21h ≈ 15.16, midnight ≈ 5.03 — correctly monotonic.
 
 ---
 

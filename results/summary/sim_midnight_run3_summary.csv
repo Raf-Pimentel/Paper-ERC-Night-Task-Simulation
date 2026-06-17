@@ -1,2 +1,2 @@
 scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
-Midnight 00:00,0.1,909,741,81.52,1.29634,0.66585,-0.26528,0.4495,-1.18919,0.33607,15.67,recordings/sim_midnight_run3.mp4
+Midnight 00:00,0.1,902,715,79.27,1.21769,0.69769,-0.26696,0.45657,-1.37278,0.50482,5.04,recordings/sim_midnight_run3.mp4
