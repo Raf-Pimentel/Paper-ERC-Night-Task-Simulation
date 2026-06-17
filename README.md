@@ -94,21 +94,25 @@ The performance of the system is evaluated across two primary metrics:
 
 ### Simulation Results (Gazebo)
 
-Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Two runs were performed per lighting condition:
+Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Three runs were performed per lighting condition:
 
 | Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | run1 | 92.3% | +1.249 m |
-| Twilight 19:00 | 3.0 lx | run2 | 88.4% | +1.292 m |
-| Evening 21:00  | 0.3 lx | run1 | 84.2% | +1.268 m |
-| Evening 21:00  | 0.3 lx | run2 | 97.7% | +1.372 m |
-| Midnight 00:00 | 0.1 lx | run1 | 99.5% | +1.390 m |
-| Midnight 00:00 | 0.1 lx | run2 | 98.3% | +1.389 m |
+| Twilight 19:00 | 3.0 lx | run1 | 81.2% | +1.264 m |
+| Twilight 19:00 | 3.0 lx | run2 | 96.2% | +1.373 m |
+| Twilight 19:00 | 3.0 lx | run3 | 97.6% | +1.365 m |
+| Evening 21:00  | 0.3 lx | run1 | 89.4% | +1.371 m |
+| Evening 21:00  | 0.3 lx | run2 | 92.6% | +1.386 m |
+| Evening 21:00  | 0.3 lx | run3 | 98.7% | +1.408 m |
+| Midnight 00:00 | 0.1 lx | run1 | 66.9% | +1.461 m |
+| Midnight 00:00 | 0.1 lx | run2 | 74.3% | +1.216 m |
+| Midnight 00:00 | 0.1 lx | run3 | 81.5% | +1.296 m |
 
 **Reliability note:**
 - **Detection rate is the primary reliable metric** from these recordings. It depends only on whether OpenCV finds the marker corners and is not affected by camera intrinsic accuracy.
-- **Pose estimation error has known limitations** in this dataset: (1) intrinsics are scaled from the 1920×1080 sensor spec down to the screencast resolution (~452×255), introducing a systematic depth bias; (2) the ground-truth reference is fixed at the marker's initial world position (2.0, 0.0, 1.0 m) while the marker moves during the trajectory, so reported errors reflect both estimation bias and actual displacement. For a quantitative sim-to-real pose comparison, recordings should be taken directly from the `/camera/image_raw` ROS topic at full 1920×1080 resolution.
-- The high variance in the 21h detection rate (84.2% vs 97.7% across runs) is under investigation and likely relates to camera angle or simulation non-determinism.
+- **Pose estimation error has known limitations** in this dataset: (1) intrinsics are scaled from the 1920×1080 sensor spec down to the screencast resolution (~440×250), introducing a systematic depth bias; (2) the ground-truth reference is fixed at the marker's initial world position (2.0, 0.0, 1.0 m) while the marker moves during the trajectory, so reported errors reflect both estimation bias and actual displacement. For a quantitative sim-to-real pose comparison, recordings should be taken directly from the `/camera/image_raw` ROS topic at full 1920×1080 resolution.
+- Detection rate now scales with target lux as expected (19h ≈ 21h > midnight), with run-to-run spread attributed to the marker shrinking in frame as it moves away during the trajectory — this effect is most pronounced at midnight, where the lowest light margin makes the marker hardest to detect once distant.
+- The 21h scenario's mean frame brightness (~15.2) is still close to midnight's (~15.7) despite higher target lux and a brighter spotlight setting in the world file; this is noted for future investigation but did not block consistent detection-rate ordering across scenarios.
 
 ---
 

@@ -1,2 +1,2 @@
 scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
-Twilight 19:00,3.0,1048,967,92.27,1.24897,0.73111,-0.26196,0.45695,-1.22104,0.35569,45.97,recordings/sim_19h_run1.mp4
+Twilight 19:00,3.0,948,770,81.22,1.26397,0.7042,-0.28472,0.46334,-1.20209,0.32018,43.16,recordings/sim_19h_run1.mp4
