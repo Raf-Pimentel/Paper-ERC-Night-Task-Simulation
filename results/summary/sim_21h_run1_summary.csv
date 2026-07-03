@@ -1,2 +1,2 @@
-scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
-Evening 21:00,0.3,927,829,89.43,1.3707,0.74902,-0.27885,0.43777,-1.25228,0.37088,15.16,recordings/sim_21h_run1.mp4
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Evening 21:00,simulation,0.3,927,829,89.43,1.3707,0.74902,-0.27885,0.43777,-1.25228,0.37088,15.16,recordings/sim_21h_run1.mp4

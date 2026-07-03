@@ -25,13 +25,19 @@ This research was conducted as part of the visiting research program at the Univ
 ├── recordings
 │   ├── sim_19h_run1.mp4 .. run3.mp4
 │   ├── sim_21h_run1.mp4 .. run3.mp4
-│   └── sim_midnight_run1.mp4 .. run3.mp4
+│   ├── sim_midnight_run1.mp4 .. run3.mp4
+│   ├── real_19h_run1.mp4 .. run3.mp4
+│   ├── real_21h_run1.mp4 .. run3.mp4
+│   └── real_midnight_run1.mp4 .. run3.mp4
 ├── results
 │   ├── raw
-│   │   └── sim_<scenario>_run<N>_raw.csv       ← one row per frame
+│   │   ├── sim_<scenario>_run<N>_raw.csv        ← one row per frame (simulation)
+│   │   └── real_<scenario>_run<N>_raw.csv       ← one row per frame (real-world)
 │   └── summary
-│       ├── sim_<scenario>_run<N>_summary.csv   ← aggregated stats per run
-│       └── all_scenarios_summary.csv           ← combined table for the paper
+│       ├── sim_<scenario>_run<N>_summary.csv    ← aggregated stats per run
+│       ├── real_<scenario>_run<N>_summary.csv
+│       ├── all_scenarios_summary.csv            ← all runs combined
+│       └── sim_vs_real_comparison.csv           ← mean ± std per scenario × source
 └── src
     └── uwb_erc_sim
         ├── CMakeLists.txt
@@ -102,13 +108,13 @@ The performance of the system is evaluated across two primary metrics:
 
 ### Simulation Results (Gazebo)
 
-Results were obtained by processing screen recordings of each scenario with `process_recordings.py`. Three runs were performed per lighting condition; the table reports mean ± standard deviation across runs.
+Results were obtained by processing screen recordings of each scenario with `process_recordings.py` using `DICT_7X7_50` (matches the simulation marker). Three runs were performed per lighting condition; the table reports mean ± standard deviation across runs.
 
 | Scenario | Target Lux | Detection Rate | Mean Depth Error |
 |---|---|---|---|
-| Twilight 19:00 | 3.0 lx | 91.7% ± 7.4% | +1.334 ± 0.050 m |
-| Evening 21:00  | 0.3 lx | 93.6% ± 3.8% | +1.388 ± 0.015 m |
-| Midnight 00:00 | 0.1 lx | 84.3% ± 8.3% | +1.262 ± 0.083 m |
+| Twilight 19:00 | 3.0 lx | 91.7% ± 7.4% | +1.330 ± 0.050 m |
+| Evening 21:00  | 0.3 lx | 93.6% ± 3.8% | +1.390 ± 0.020 m |
+| Midnight 00:00 | 0.1 lx | 84.3% ± 8.3% | +1.260 ± 0.080 m |
 
 <details>
 <summary>Per-run breakdown</summary>
@@ -130,8 +136,58 @@ Results were obtained by processing screen recordings of each scenario with `pro
 **Reliability note:**
 - **Detection rate is the primary reliable metric** from these recordings. It depends only on whether OpenCV finds the marker corners and is not affected by camera intrinsic accuracy.
 - **Pose estimation error has known limitations** in this dataset: (1) intrinsics are scaled from the 1920×1080 sensor spec down to the screencast resolution (~440×250), introducing a systematic depth bias; (2) the ground-truth reference is fixed at the marker's initial world position (2.0, 0.0, 1.0 m) while the marker moves during the trajectory, so reported errors reflect both estimation bias and actual displacement. For a quantitative sim-to-real pose comparison, recordings should be taken directly from the `/camera/image_raw` ROS topic at full 1920×1080 resolution.
-- Detection rate now scales with target lux as expected (19h ≈ 21h > midnight), with run-to-run spread attributed to the marker shrinking in frame as it moves away during the trajectory — this effect is most pronounced at midnight, where the lowest light margin makes the marker hardest to detect once distant.
+- Detection rate scales with target lux as expected (19h ≈ 21h > midnight), with run-to-run spread attributed to the marker shrinking in frame as it moves away during the trajectory — this effect is most pronounced at midnight, where the lowest light margin makes the marker hardest to detect once distant.
 - **Resolved:** the 21h scenario's mean frame brightness (~15.2) was close to midnight's (~15.7) despite higher target lux. Root cause: `night_task_midnight.sdf`'s `<background>` (sky color) was set to 0.01 — brighter than 21h's 0.005 — breaking the 19h > 21h > midnight darkening progression used by every other light parameter in these worlds. Fixed to 0.0016 to restore the progression. Midnight was re-recorded after the fix, and `mean_brightness` in the screencast pipeline now confirms it: 19h ≈ 44.2, 21h ≈ 15.16, midnight ≈ 5.03 — correctly monotonic.
+
+---
+
+### Real-World Results (UWB Workshop)
+
+Physical experiments were conducted at the University of West Bohemia workshop using an Intel RealSense D435i camera and a synchronized spotlight. Videos were recorded at 1280×720 @ 15 fps and processed with `process_recordings.py` using `DICT_ARUCO_ORIGINAL` (the dictionary of the physical marker, ID 297). Three runs were performed per lighting condition.
+
+| Scenario | Target Lux | Detection Rate | Mean Depth Error |
+|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | 91.1% ± 0.6% | +0.550 ± 0.030 m |
+| Evening 21:00  | 0.3 lx | 83.2% ± 4.2% | +0.470 ± 0.030 m |
+| Midnight 00:00 | 0.1 lx | 37.8% ± 3.8% | +0.170 ± 0.030 m |
+
+<details>
+<summary>Per-run breakdown</summary>
+
+| Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
+|---|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | run1 | 91.3% | +0.590 m |
+| Twilight 19:00 | 3.0 lx | run2 | 90.4% | +0.516 m |
+| Twilight 19:00 | 3.0 lx | run3 | 91.8% | +0.531 m |
+| Evening 21:00  | 0.3 lx | run1 | 89.1% | +0.429 m |
+| Evening 21:00  | 0.3 lx | run2 | 80.6% | +0.488 m |
+| Evening 21:00  | 0.3 lx | run3 | 80.0% | +0.494 m |
+| Midnight 00:00 | 0.1 lx | run1 | 32.6% | +0.143 m |
+| Midnight 00:00 | 0.1 lx | run2 | 39.4% | +0.210 m |
+| Midnight 00:00 | 0.1 lx | run3 | 41.4% | +0.162 m |
+
+</details>
+
+---
+
+### Sim-to-Real Comparison
+
+| Scenario | Target Lux | Source | Detection Rate | Mean Depth Error |
+|---|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | Simulation  | 91.7% ± 7.4% | +1.330 ± 0.050 m |
+| Twilight 19:00 | 3.0 lx | Real-world  | 91.1% ± 0.6% | +0.550 ± 0.030 m |
+| Evening 21:00  | 0.3 lx | Simulation  | 93.6% ± 3.8% | +1.390 ± 0.020 m |
+| Evening 21:00  | 0.3 lx | Real-world  | 83.2% ± 4.2% | +0.470 ± 0.030 m |
+| Midnight 00:00 | 0.1 lx | Simulation  | 84.3% ± 8.3% | +1.260 ± 0.080 m |
+| Midnight 00:00 | 0.1 lx | Real-world  | 37.8% ± 3.8% | +0.170 ± 0.030 m |
+
+**Key observations:**
+
+- **Twilight (3.0 lx):** Detection rates match almost exactly (~91% both), demonstrating good sim-to-real fidelity at the highest light level tested.
+- **Evening (0.3 lx):** A ~10 pp gap emerges (real 83% vs sim 94%). The real sensor struggles more as ambient light falls below 1 lx, a gap the simulation does not fully capture.
+- **Midnight (0.1 lx):** The largest divergence — real-world detection collapses to 38% while simulation maintains 84%. The simulator overestimates sensor performance at extreme low-light; the physical IR spotlight illuminates a narrower effective cone and the real sensor has higher noise than the Gazebo model assumes.
+- **Depth error:** Real-world errors are consistently ~0.8 m smaller than simulation. The simulation depth bias is an artifact of the screencast pipeline: intrinsics for a 1920×1080 sensor were scaled to the ~440×250 screen recording, introducing a systematic offset. Real-world videos at 1280×720 do not have this bias.
+- **Run-to-run consistency:** Real-world variance is notably tighter (e.g., ±0.6% at 19h) than simulation (±7.4%), reflecting more controlled physical conditions compared to the GPU-dependent Gazebo frame rate.
 
 ---
 

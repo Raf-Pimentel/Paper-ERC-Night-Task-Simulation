@@ -1,10 +1,19 @@
-scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
-Twilight 19:00,3.0,948,770,81.22,1.26397,0.7042,-0.28472,0.46334,-1.20209,0.32018,43.16,recordings/sim_19h_run1.mp4
-Twilight 19:00,3.0,912,877,96.16,1.37297,0.74153,-0.36524,0.49974,-1.28594,0.44235,44.76,recordings/sim_19h_run2.mp4
-Twilight 19:00,3.0,910,888,97.58,1.36486,0.72969,-0.35675,0.49517,-1.28753,0.45529,44.78,recordings/sim_19h_run3.mp4
-Evening 21:00,0.3,927,829,89.43,1.3707,0.74902,-0.27885,0.43777,-1.25228,0.37088,15.16,recordings/sim_21h_run1.mp4
-Evening 21:00,0.3,908,841,92.62,1.38615,0.72856,-0.30527,0.48532,-1.34271,0.48887,15.16,recordings/sim_21h_run2.mp4
-Evening 21:00,0.3,907,895,98.68,1.40762,0.71372,-0.31567,0.46678,-1.33574,0.48859,15.16,recordings/sim_21h_run3.mp4
-Midnight 00:00,0.1,924,717,77.6,1.19055,0.69877,-0.23586,0.45316,-1.2819,0.39218,5.03,recordings/sim_midnight_run1.mp4
-Midnight 00:00,0.1,958,919,95.93,1.37766,0.74247,-0.27703,0.4537,-1.29915,0.48276,5.03,recordings/sim_midnight_run2.mp4
-Midnight 00:00,0.1,902,715,79.27,1.21769,0.69769,-0.26696,0.45657,-1.37278,0.50482,5.04,recordings/sim_midnight_run3.mp4
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Twilight 19:00,real-world,3.0,514,469,91.25,0.59008,0.69947,-0.23891,0.42201,-1.07928,0.26939,64.5,recordings/real_19h_run1.mp4
+Twilight 19:00,real-world,3.0,487,440,90.35,0.51636,0.48758,-0.228,0.30588,-1.07151,0.20807,57.37,recordings/real_19h_run2.mp4
+Twilight 19:00,real-world,3.0,474,435,91.77,0.53093,0.47021,-0.22914,0.30552,-1.05466,0.20421,54.66,recordings/real_19h_run3.mp4
+Evening 21:00,real-world,0.3,468,417,89.1,0.4291,0.69241,-0.39696,0.51507,-1.11156,0.17016,13.59,recordings/real_21h_run1.mp4
+Evening 21:00,real-world,0.3,443,357,80.59,0.48824,0.9519,-0.36323,0.70674,-1.14413,0.26349,12.2,recordings/real_21h_run2.mp4
+Evening 21:00,real-world,0.3,444,355,79.95,0.49412,0.88534,-0.37313,0.61691,-1.17182,0.21622,11.23,recordings/real_21h_run3.mp4
+Midnight 00:00,real-world,0.1,460,150,32.61,0.14309,0.43058,-0.25006,0.27765,-1.14122,0.14361,6.36,recordings/real_midnight_run1.mp4
+Midnight 00:00,real-world,0.1,465,183,39.35,0.20993,0.23679,-0.19163,0.25489,-1.11831,0.15168,6.2,recordings/real_midnight_run2.mp4
+Midnight 00:00,real-world,0.1,473,196,41.44,0.16187,0.30725,-0.16651,0.25223,-1.10262,0.17088,5.76,recordings/real_midnight_run3.mp4
+Twilight 19:00,simulation,3.0,948,770,81.22,1.26397,0.7042,-0.28472,0.46334,-1.20209,0.32018,43.16,recordings/sim_19h_run1.mp4
+Twilight 19:00,simulation,3.0,912,877,96.16,1.37297,0.74153,-0.36524,0.49974,-1.28594,0.44235,44.76,recordings/sim_19h_run2.mp4
+Twilight 19:00,simulation,3.0,910,888,97.58,1.36486,0.72969,-0.35675,0.49517,-1.28753,0.45529,44.78,recordings/sim_19h_run3.mp4
+Evening 21:00,simulation,0.3,927,829,89.43,1.3707,0.74902,-0.27885,0.43777,-1.25228,0.37088,15.16,recordings/sim_21h_run1.mp4
+Evening 21:00,simulation,0.3,908,841,92.62,1.38615,0.72856,-0.30527,0.48532,-1.34271,0.48887,15.16,recordings/sim_21h_run2.mp4
+Evening 21:00,simulation,0.3,907,895,98.68,1.40762,0.71372,-0.31567,0.46678,-1.33574,0.48859,15.16,recordings/sim_21h_run3.mp4
+Midnight 00:00,simulation,0.1,924,717,77.6,1.19055,0.69877,-0.23586,0.45316,-1.2819,0.39218,5.03,recordings/sim_midnight_run1.mp4
+Midnight 00:00,simulation,0.1,958,919,95.93,1.37766,0.74247,-0.27703,0.4537,-1.29915,0.48276,5.03,recordings/sim_midnight_run2.mp4
+Midnight 00:00,simulation,0.1,902,715,79.27,1.21769,0.69769,-0.26696,0.45657,-1.37278,0.50482,5.04,recordings/sim_midnight_run3.mp4

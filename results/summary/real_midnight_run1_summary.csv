@@ -1,0 +1,2 @@
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Midnight 00:00,real-world,0.1,460,150,32.61,0.14309,0.43058,-0.25006,0.27765,-1.14122,0.14361,6.36,recordings/real_midnight_run1.mp4

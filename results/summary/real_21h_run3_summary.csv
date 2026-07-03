@@ -1,0 +1,2 @@
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Evening 21:00,real-world,0.3,444,355,79.95,0.49412,0.88534,-0.37313,0.61691,-1.17182,0.21622,11.23,recordings/real_21h_run3.mp4

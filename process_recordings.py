@@ -2,37 +2,43 @@
 """
 process_recordings.py  —  ERC Night Task: Video Processing Pipeline
 ====================================================================
-Processes screen recordings of Gazebo simulations, detects DICT_7X7_50
-ArUco markers frame-by-frame, and saves structured CSV results.
+Processes recordings of Gazebo simulations and real-world experiments,
+detects DICT_7X7_50 ArUco markers frame-by-frame, and saves structured
+CSV results.
+
+Naming convention
+-----------------
+  Simulation  : sim_<scenario>_run<N>.mp4   (e.g. sim_19h_run1.mp4)
+  Real-world  : real_<scenario>_run<N>.mp4  (e.g. real_19h_run1.mp4)
+  <scenario>  : 19h | 21h | midnight
 
 Usage:
     python3 process_recordings.py --video recordings/sim_19h_run1.mp4 --scenario 19h
-    python3 process_recordings.py --video recordings/sim_21h_run1.mp4 --scenario 21h
-    python3 process_recordings.py --video recordings/sim_midnight_run1.mp4 --scenario midnight
+    python3 process_recordings.py --video recordings/real_midnight_run1.mp4 --scenario midnight
 
-    # Process all recordings at once:
+    # Process all recordings at once (sim + real) and generate comparison:
     python3 process_recordings.py --all
 
 Output:
     results/
     ├── raw/
-    │   ├── sim_19h_run1_raw.csv        ← one row per frame
-    │   ├── sim_21h_run1_raw.csv
-    │   └── sim_midnight_run1_raw.csv
+    │   ├── sim_19h_run1_raw.csv          ← one row per frame (simulation)
+    │   └── real_19h_run1_raw.csv         ← one row per frame (real-world)
     └── summary/
-        ├── sim_19h_run1_summary.csv    ← aggregated stats per scenario
-        ├── sim_21h_run1_summary.csv
-        └── all_scenarios_summary.csv   ← combined table for the paper
+        ├── sim_19h_run1_summary.csv
+        ├── real_19h_run1_summary.csv
+        ├── all_scenarios_summary.csv     ← all runs combined
+        └── sim_vs_real_comparison.csv    ← mean ± std per scenario × source
 
 Raw CSV columns:
-    frame, time_s, scenario, target_lux, detected,
+    frame, time_s, scenario, source, target_lux, detected,
     est_x, est_y, est_z,
     err_x, err_y, err_z,
     rot_x, rot_y, rot_z,
     marker_area_px, frame_brightness
 
 Summary CSV columns:
-    scenario, target_lux, total_frames, detected_frames,
+    scenario, source, target_lux, total_frames, detected_frames,
     detection_rate_pct,
     mean_err_x, std_err_x,
     mean_err_y, std_err_y,
@@ -41,8 +47,8 @@ Summary CSV columns:
 
 Notes:
     - The ArUco dictionary used is DICT_7X7_50 (matches the simulation model).
-    - Ground-truth marker pose matches the SDF: world (x=2.0, y=0.0, z=1.0).
-    - Camera intrinsics match the D435i simulated profile (1920×1080, H-FOV=1.204 rad).
+    - Ground-truth marker pose: world (x=2.0, y=0.0, z=1.0) — same for sim and real.
+    - Camera intrinsics match the D435i profile (1920×1080, H-FOV=1.204 rad).
     - If the video resolution differs from 1920×1080, intrinsics are scaled automatically.
 """
 
@@ -80,8 +86,11 @@ BASE_CAMERA_MATRIX = np.array([
 ], dtype=np.float64)
 DIST_COEFFS = np.zeros((4, 1), dtype=np.float64)
 
-# ArUco setup — DICT_7X7_50 to match the simulation model
-ARUCO_DICT   = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_7X7_50)
+# ArUco dictionaries
+# Simulation uses DICT_7X7_50 (matches the model SDF texture).
+# Real-world marker is from DICT_ARUCO_ORIGINAL (ID 297).
+ARUCO_DICT_SIM  = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_7X7_50)
+ARUCO_DICT_REAL = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 # DetectorParameters_create() required for OpenCV < 4.7; DetectorParameters() segfaults in 4.6.x
 ARUCO_PARAMS = (cv2.aruco.DetectorParameters_create()
                 if hasattr(cv2.aruco, "DetectorParameters_create")
@@ -135,6 +144,14 @@ def marker_area(corners) -> float:
 # Core processing
 # ---------------------------------------------------------------------------
 
+def _infer_source(video_path: str) -> str:
+    """Return 'simulation' or 'real-world' based on the filename prefix."""
+    stem = Path(video_path).stem.lower()
+    if stem.startswith("real_"):
+        return "real-world"
+    return "simulation"
+
+
 def process_video(video_path: str, scenario: str) -> dict:
     """
     Process a single video file.
@@ -151,6 +168,8 @@ def process_video(video_path: str, scenario: str) -> dict:
     target_lux   = scen_info["lux"]
     scen_label   = scen_info["label"]
     video_stem   = Path(video_path).stem
+    source       = _infer_source(video_path)
+    aruco_dict   = ARUCO_DICT_REAL if source == "real-world" else ARUCO_DICT_SIM
 
     # Ensure output dirs exist
     RAW_DIR.mkdir(parents=True, exist_ok=True)
@@ -169,8 +188,10 @@ def process_video(video_path: str, scenario: str) -> dict:
 
     camera_matrix = scale_camera_matrix(BASE_CAMERA_MATRIX, frame_w, frame_h)
 
+    dict_name = "DICT_ARUCO_ORIGINAL" if source == "real-world" else "DICT_7X7_50"
     print(f"\n{'='*60}")
     print(f"Video      : {video_path}")
+    print(f"Source     : {source}  [{dict_name}]")
     print(f"Scenario   : {scen_label}  ({target_lux} lx)")
     print(f"Resolution : {frame_w}×{frame_h}  @  {fps:.1f} fps")
     print(f"Frames     : {total_frm}")
@@ -186,7 +207,7 @@ def process_video(video_path: str, scenario: str) -> dict:
     with open(raw_csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "frame", "time_s", "scenario", "target_lux", "detected",
+            "frame", "time_s", "scenario", "source", "target_lux", "detected",
             "est_x", "est_y", "est_z",
             "err_x", "err_y", "err_z",
             "rot_x", "rot_y", "rot_z",
@@ -204,7 +225,7 @@ def process_video(video_path: str, scenario: str) -> dict:
             brightness  = round(float(np.mean(gray)), 3)
 
             corners, ids, _ = cv2.aruco.detectMarkers(
-                gray, ARUCO_DICT, parameters=ARUCO_PARAMS)
+                gray, aruco_dict, parameters=ARUCO_PARAMS)
 
             detected = 1 if (ids is not None and len(ids) > 0) else 0
 
@@ -237,6 +258,7 @@ def process_video(video_path: str, scenario: str) -> dict:
                 frame_idx,
                 time_s,
                 scen_label,
+                source,
                 target_lux,
                 detected,
                 round(est_x, 5), round(est_y, 5), round(est_z, 5),
@@ -272,6 +294,7 @@ def process_video(video_path: str, scenario: str) -> dict:
 
     summary = {
         "scenario":           scen_label,
+        "source":             source,
         "target_lux":         target_lux,
         "total_frames":       total_count,
         "detected_frames":    detected_count,
@@ -306,18 +329,90 @@ def process_video(video_path: str, scenario: str) -> dict:
 # Batch processing
 # ---------------------------------------------------------------------------
 
+def build_comparison(all_summaries: list[dict]) -> None:
+    """
+    Aggregate all per-run summaries into a sim-vs-real comparison table.
+
+    Output: results/summary/sim_vs_real_comparison.csv
+    Columns: scenario, source, target_lux,
+             runs, mean_detection_rate, std_detection_rate,
+             mean_depth_err, std_depth_err,
+             mean_brightness
+    """
+    from collections import defaultdict
+
+    groups: dict[tuple, list] = defaultdict(list)
+    for s in all_summaries:
+        key = (s["scenario"], s["source"], s["target_lux"])
+        groups[key].append(s)
+
+    rows = []
+    scenario_order = ["Twilight 19:00", "Evening 21:00", "Midnight 00:00"]
+    source_order   = ["simulation", "real-world"]
+
+    for scen in scenario_order:
+        for src in source_order:
+            for (sc, so, lux), runs in groups.items():
+                if sc != scen or so != src:
+                    continue
+                det_rates = [r["detection_rate_pct"] for r in runs]
+                depth_errs = [r["mean_err_x"] for r in runs]
+                brightnesses = [r["mean_brightness"] for r in runs]
+
+                def _ms(lst):
+                    return (round(float(np.mean(lst)), 2),
+                            round(float(np.std(lst)), 2))
+
+                mean_dr, std_dr = _ms(det_rates)
+                mean_de, std_de = _ms(depth_errs)
+                mean_br, _      = _ms(brightnesses)
+
+                rows.append({
+                    "scenario":             scen,
+                    "source":               src,
+                    "target_lux":           lux,
+                    "runs":                 len(runs),
+                    "mean_detection_rate":  mean_dr,
+                    "std_detection_rate":   std_dr,
+                    "mean_depth_err":       mean_de,
+                    "std_depth_err":        std_de,
+                    "mean_brightness":      mean_br,
+                })
+
+    if not rows:
+        return
+
+    comp_path = SUMMARY_DIR / "sim_vs_real_comparison.csv"
+    with open(comp_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"\n{'='*60}")
+    print("Sim-vs-Real Comparison")
+    print(f"{'='*60}")
+    print(f"{'Scenario':<20} {'Source':<12} {'Lux':>5}  "
+          f"{'Det.Rate':>10}  {'Depth Err':>10}  {'Brightness':>10}")
+    print("-" * 75)
+    for r in rows:
+        print(f"{r['scenario']:<20} {r['source']:<12} {r['target_lux']:>5}  "
+              f"{r['mean_detection_rate']:>7.1f}±{r['std_detection_rate']:<4.1f}  "
+              f"{r['mean_depth_err']:>+7.3f}±{r['std_depth_err']:<5.3f}  "
+              f"{r['mean_brightness']:>10.2f}")
+    print(f"\nSaved → {comp_path}")
+
+
 def process_all():
     """
     Scan the recordings/ folder and process all videos whose names match
-    the pattern sim_<scenario>_*.mp4.
+    sim_<scenario>_*.mp4 or real_<scenario>_*.mp4.
+    After processing, generate a combined summary and a sim-vs-real comparison.
     """
     recordings_dir = Path("recordings")
     if not recordings_dir.exists():
-        print("ERROR: 'recordings/' directory not found. "
-              "Create it and place your .mp4 files there.")
+        print("ERROR: 'recordings/' directory not found.")
         sys.exit(1)
 
-    # Map filename keywords to scenarios
     keyword_map = {"19h": "19h", "21h": "21h", "midnight": "midnight"}
 
     videos_found = sorted(recordings_dir.glob("*.mp4"))
@@ -327,9 +422,15 @@ def process_all():
 
     results = []
     for video_path in videos_found:
+        stem = video_path.stem.lower()
+        if not (stem.startswith("sim_") or stem.startswith("real_")):
+            print(f"  Skipping {video_path.name} — "
+                  f"filename must start with 'sim_' or 'real_'.")
+            continue
+
         scenario = None
         for kw, sc in keyword_map.items():
-            if kw in video_path.stem:
+            if kw in stem:
                 scenario = sc
                 break
         if scenario is None:
@@ -340,42 +441,77 @@ def process_all():
         result = process_video(str(video_path), scenario)
         results.append(result["summary"])
 
-    # Write combined summary
-    if results:
-        combined_path = SUMMARY_DIR / "all_scenarios_summary.csv"
-        with open(combined_path, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
-            writer.writeheader()
-            writer.writerows(results)
-        print(f"\n{'='*60}")
-        print(f"All done. Combined summary → {combined_path}")
+    if not results:
+        print("No videos were processed.")
+        return
+
+    # Combined flat summary (all runs, all sources)
+    combined_path = SUMMARY_DIR / "all_scenarios_summary.csv"
+    with open(combined_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
+        writer.writeheader()
+        writer.writerows(results)
+    print(f"\n{'='*60}")
+    print(f"All done. Combined summary → {combined_path}")
+
+    # Sim-vs-real comparison table
+    build_comparison(results)
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
+def compare_from_existing() -> None:
+    """Regenerate sim_vs_real_comparison.csv from already-processed summary CSVs."""
+    summaries = []
+    for p in sorted(SUMMARY_DIR.glob("*_summary.csv")):
+        if p.name in ("all_scenarios_summary.csv", "sim_vs_real_comparison.csv"):
+            continue
+        with open(p, newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # Backfill 'source' for older CSVs that predate the column
+                if "source" not in row or not row["source"]:
+                    row["source"] = _infer_source(row.get("source_video", ""))
+                # Cast numeric fields
+                row["target_lux"]         = float(row["target_lux"])
+                row["detection_rate_pct"] = float(row["detection_rate_pct"])
+                row["mean_err_x"]         = float(row["mean_err_x"])
+                row["mean_brightness"]    = float(row["mean_brightness"])
+                summaries.append(row)
+    if summaries:
+        build_comparison(summaries)
+    else:
+        print("No per-run summary CSVs found in results/summary/.")
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Process Gazebo simulation recordings for ArUco detection analysis")
+        description="Process sim/real-world recordings for ArUco detection analysis")
     parser.add_argument("--video",    type=str, default=None,
                         help="Path to a single .mp4 recording")
     parser.add_argument("--scenario", type=str, default=None,
                         choices=list(SCENARIOS.keys()),
                         help="Scenario for this recording: 19h | 21h | midnight")
     parser.add_argument("--all",      action="store_true",
-                        help="Process all .mp4 files in recordings/ automatically")
+                        help="Process all sim_/real_ .mp4 files in recordings/")
+    parser.add_argument("--compare",  action="store_true",
+                        help="Rebuild sim-vs-real comparison from existing summary CSVs")
     args = parser.parse_args()
 
     if args.all:
         process_all()
+    elif args.compare:
+        compare_from_existing()
     elif args.video and args.scenario:
         process_video(args.video, args.scenario)
     else:
         parser.print_help()
         print("\nExamples:")
-        print("  python3 process_recordings.py --video recordings/sim_19h_run1.mp4 --scenario 19h")
+        print("  python3 process_recordings.py --video recordings/real_19h_run1.mp4 --scenario 19h")
         print("  python3 process_recordings.py --all")
+        print("  python3 process_recordings.py --compare")
         sys.exit(1)
 
 

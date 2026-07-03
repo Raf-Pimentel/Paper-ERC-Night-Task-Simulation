@@ -1,2 +1,2 @@
-scenario,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
-Twilight 19:00,3.0,910,888,97.58,1.36486,0.72969,-0.35675,0.49517,-1.28753,0.45529,44.78,recordings/sim_19h_run3.mp4
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Twilight 19:00,simulation,3.0,910,888,97.58,1.36486,0.72969,-0.35675,0.49517,-1.28753,0.45529,44.78,recordings/sim_19h_run3.mp4

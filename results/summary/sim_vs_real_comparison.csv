@@ -1,0 +1,7 @@
+scenario,source,target_lux,runs,mean_detection_rate,std_detection_rate,mean_depth_err,std_depth_err,mean_brightness
+Twilight 19:00,simulation,3.0,3,91.65,7.4,1.33,0.05,44.23
+Twilight 19:00,real-world,3.0,3,91.12,0.59,0.55,0.03,58.84
+Evening 21:00,simulation,0.3,3,93.58,3.84,1.39,0.02,15.16
+Evening 21:00,real-world,0.3,3,83.21,4.17,0.47,0.03,12.34
+Midnight 00:00,simulation,0.1,3,84.27,8.28,1.26,0.08,5.03
+Midnight 00:00,real-world,0.1,3,37.8,3.77,0.17,0.03,6.11

@@ -1,0 +1,2 @@
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Twilight 19:00,real-world,3.0,514,469,91.25,0.59008,0.69947,-0.23891,0.42201,-1.07928,0.26939,64.5,recordings/real_19h_run1.mp4
