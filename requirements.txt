@@ -1,0 +1,6 @@
+# Pinned dependencies for process_recordings.py (ArUco detection + pose evaluation).
+# opencv-contrib-python is pinned explicitly because distro-packaged OpenCV builds
+# (e.g. Ubuntu apt's python3-opencv 4.5.4) use an older ArUco implementation with
+# materially different detection behavior than this version.
+numpy==2.2.6
+opencv-contrib-python==4.10.0.84
