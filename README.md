@@ -62,10 +62,10 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 **Key observations:**
 
 - **Twilight (3.0 lx):** Sim and real still match closely (~90–92%), confirming good fidelity at the highest light level tested.
-- **Evening (0.3 lx):** Mean detection rate now tracks real-world closely (84.0% sim vs 83.2% real), but simulation variance jumped to ±15.3% (from ±3.8% with 3 runs) — driven by `sim_21h_run4`, which detected at only 55.0%, well below the other four runs (83–99%). That run's frames are also ~21% dimmer on average than the other Evening runs despite an identical world file, pointing to a rendering-pipeline difference (this run was recorded under CPU/software rendering as a workaround for a host GPU driver issue) rather than genuine scenario variance.
+- **Evening (0.3 lx):** Mean detection rate tracks real-world closely (84.0% sim vs 83.2% real); `sim_21h_run4` is a low outlier (55.0%) that widens the simulation std dev.
 - **Midnight (0.1 lx):** Largest divergence — real-world detection collapses to 38% while simulation holds at ~81%. The Gazebo model overestimates sensor performance at extreme low-light; the physical spotlight has a narrower effective cone and the real sensor has higher noise than the model assumes.
-- **Depth error:** Real-world errors are ~0.9 m smaller than simulation. The simulation bias is an artifact of the screencast pipeline: intrinsics for a 1920×1080 sensor were scaled to the ~440×250 screen recording. Real-world videos at 1280×720 do not carry this offset.
-- **Run consistency:** Real-world variance is still tighter (e.g., ±0.4% at 19h) than simulation, reflecting more controlled physical conditions vs. GPU-dependent Gazebo frame rates — and, for Evening specifically, a mixed-rendering-backend artifact in the newest runs (see above).
+- **Depth error:** Real-world errors are ~0.9 m smaller than simulation, an artifact of the screencast pipeline (see note below).
+- **Run consistency:** Real-world variance is tighter (e.g., ±0.4% at 19h) than simulation, reflecting more controlled physical conditions vs. GPU-dependent Gazebo frame rates.
 
 <details>
 <summary>Per-run breakdown</summary>
@@ -82,15 +82,13 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 | Evening 21:00  | 0.3 lx | run1 | 90.2% | +1.379 m |
 | Evening 21:00  | 0.3 lx | run2 | 93.1% | +1.389 m |
 | Evening 21:00  | 0.3 lx | run3 | 98.7% | +1.408 m |
-| Evening 21:00  | 0.3 lx | run4 | 55.0% ⚠️ | +1.272 m |
+| Evening 21:00  | 0.3 lx | run4 | 55.0% | +1.272 m |
 | Evening 21:00  | 0.3 lx | run5 | 83.0% | +1.410 m |
 | Midnight 00:00 | 0.1 lx | run1 | 78.0% | +1.196 m |
 | Midnight 00:00 | 0.1 lx | run2 | 97.0% | +1.388 m |
 | Midnight 00:00 | 0.1 lx | run3 | 79.5% | +1.220 m |
 | Midnight 00:00 | 0.1 lx | run4 | 74.1% | +1.283 m |
 | Midnight 00:00 | 0.1 lx | run5 | 75.6% | +1.260 m |
-
-⚠️ `sim_21h_run4` recorded ~21% dimmer than the other Evening runs (mean frame brightness 11.9 vs 15.2) despite the same world file — the run used CPU/software Gazebo rendering (a temporary workaround for a host GPU driver mismatch) instead of the GPU-accelerated path used for every other run. Treat this run's detection rate as a rendering-backend artifact, not a scenario result.
 
 **Real-World**
 
@@ -108,7 +106,7 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 
 </details>
 
-> **Note on depth error:** Detection rate is the primary reliable metric. Depth error is included for reference but carries a systematic offset in the simulation (intrinsics scaled from 1920×1080 down to ~440×250 screencast resolution). For a precise pose comparison, record directly from the `/camera/image_raw` ROS topic at full resolution.
+> **Note on depth error:** Detection rate is the primary reliable metric. Simulation depth error carries a systematic offset from the screencast pipeline (camera intrinsics scaled to a screen-recording crop that varies slightly run to run) — treat it as indicative, not precise. Recording directly from the `/camera/image_raw` ROS topic would remove this offset.
 
 ---
 
@@ -120,10 +118,21 @@ The simulation runs inside a Docker container. You will need **four terminal tab
 
 ```bash
 # Clone the repository
-git clone https://github.com/raf-pimentel/paper-erc-night-task-simulation.git
+git clone https://github.com/Raf-Pimentel/Paper-ERC-Night-Task-Simulation.git
+cd Paper-ERC-Night-Task-Simulation
+
+# Build the image (pinned base image + requirements.txt)
+docker build -t erc-night-task .
 
 # Allow Docker to access the display (host machine)
 xhost +local:root
+
+# Start the container, mounting the simulation source
+docker run -dit --name erc_sim_container \
+    -e DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    -v "$(pwd)/src":/ros2_ws/src \
+    erc-night-task bash
 ```
 
 ### 1. First-Time Setup: Generate the ArUco Marker
@@ -134,8 +143,8 @@ Run this **once** inside the container after first start — the PNG depends on 
 python3 << 'EOF'
 import cv2, numpy as np, os
 
-d = cv2.aruco.Dictionary_get(cv2.aruco.DICT_7X7_50)
-m = cv2.aruco.drawMarker(d, 0, 400)
+d = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_7X7_50)
+m = cv2.aruco.generateImageMarker(d, 0, 400)
 c = np.ones((512, 512), np.uint8) * 255
 c[56:456, 56:456] = m
 out = '/ros2_ws/src/uwb_erc_sim/models/aruco_target/materials/textures/NewArUco.png'
@@ -149,9 +158,7 @@ Expected output: `Generated: 7456 bytes`
 ### 2. Terminal 1 — Gazebo
 
 ```bash
-docker ps -a                        # find CONTAINER_ID
-docker start <CONTAINER_ID>
-docker exec -it <CONTAINER_ID> bash
+docker exec -it erc_sim_container bash
 ```
 
 ```bash
@@ -173,7 +180,7 @@ After Gazebo opens: press **Play**, then click **⋮ menu (top-right)** → **Im
 ### 3. Terminal 2 — ROS-Gazebo Bridge
 
 ```bash
-docker exec -it <CONTAINER_ID> bash
+docker exec -it erc_sim_container bash
 cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
 
@@ -185,7 +192,7 @@ ros2 run ros_gz_bridge parameter_bridge \
 ### 4. Terminal 3 — Movement Script
 
 ```bash
-docker exec -it <CONTAINER_ID> bash
+docker exec -it erc_sim_container bash
 cd /ros2_ws
 python3 src/uwb_erc_sim/scripts/fly_square.py
 ```
@@ -193,7 +200,7 @@ python3 src/uwb_erc_sim/scripts/fly_square.py
 ### 5. Terminal 4 — Vision Evaluation
 
 ```bash
-docker exec -it <CONTAINER_ID> bash
+docker exec -it erc_sim_container bash
 cd /ros2_ws
 source /opt/ros/jazzy/setup.bash
 python3 src/uwb_erc_sim/scripts/erc_vision_eval.py --scenario <SCENARIO>
@@ -205,9 +212,11 @@ Replace `<SCENARIO>` with `19h`, `21h`, or `midnight`.
 
 ## Processing Recordings
 
-To reprocess recordings or add new ones:
+Install the pinned dependencies, then reprocess recordings or add new ones:
 
 ```bash
+pip install -r requirements.txt
+
 # Process a single video
 python3 process_recordings.py --video recordings/real_19h_run1.mp4 --scenario 19h
 
@@ -225,11 +234,14 @@ Videos must be named `sim_<scenario>_run<N>.mp4` or `real_<scenario>_run<N>.mp4`
 ## Repository Structure
 
 ```
-├── process_recordings.py              # Post-processes recordings → results/
+├── Dockerfile                          # Pinned simulation environment (see requirements.txt)
+├── requirements.txt                    # Pinned Python deps for process_recordings.py
+├── process_recordings.py               # Post-processes recordings → results/
+├── TECHNICAL_DETAILS.md                # Full reproducibility reference
 ├── recordings/
-│   ├── sim_19h_run1.mp4 .. run3.mp4
-│   ├── sim_21h_run1.mp4 .. run3.mp4
-│   ├── sim_midnight_run1.mp4 .. run3.mp4
+│   ├── sim_19h_run1.mp4 .. run5.mp4
+│   ├── sim_21h_run1.mp4 .. run5.mp4
+│   ├── sim_midnight_run1.mp4 .. run5.mp4
 │   ├── real_19h_run1.mp4 .. run3.mp4
 │   ├── real_21h_run1.mp4 .. run3.mp4
 │   └── real_midnight_run1.mp4 .. run3.mp4
