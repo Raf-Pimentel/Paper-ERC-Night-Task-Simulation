@@ -28,15 +28,15 @@ The European Rover Challenge (ERC) Night Task requires reliable perception in ne
 
 ## Results
 
-Three runs were performed per lighting condition. Tables report mean ± std dev across runs.
+Five simulation runs and three real-world runs were performed per lighting condition. Tables report mean ± std dev across runs.
 
 ### Simulation (Gazebo)
 
 | Scenario | Target Lux | Detection Rate | Mean Depth Error |
 |---|---|---|---|
-| Twilight 19:00 | 3.0 lx | 91.7% ± 7.4% | +1.330 ± 0.050 m |
-| Evening 21:00  | 0.3 lx | 93.6% ± 3.8% | +1.390 ± 0.020 m |
-| Midnight 00:00 | 0.1 lx | 84.3% ± 8.3% | +1.260 ± 0.080 m |
+| Twilight 19:00 | 3.0 lx | 90.1% ± 6.4% | +1.430 ± 0.200 m |
+| Evening 21:00  | 0.3 lx | 84.0% ± 15.3% | +1.370 ± 0.050 m |
+| Midnight 00:00 | 0.1 lx | 80.8% ± 8.3% | +1.270 ± 0.070 m |
 
 ### Real-World (UWB Workshop)
 
@@ -44,28 +44,28 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 
 | Scenario | Target Lux | Detection Rate | Mean Depth Error |
 |---|---|---|---|
-| Twilight 19:00 | 3.0 lx | 91.1% ± 0.6% | +0.550 ± 0.030 m |
-| Evening 21:00  | 0.3 lx | 83.2% ± 4.2% | +0.470 ± 0.030 m |
+| Twilight 19:00 | 3.0 lx | 92.3% ± 0.4% | +0.520 ± 0.020 m |
+| Evening 21:00  | 0.3 lx | 83.2% ± 4.2% | +0.420 ± 0.010 m |
 | Midnight 00:00 | 0.1 lx | 37.8% ± 3.8% | +0.170 ± 0.030 m |
 
 ### Sim-to-Real Comparison
 
 | Scenario | Target Lux | Source | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | Simulation | 91.7% ± 7.4% | +1.330 ± 0.050 m |
-| Twilight 19:00 | 3.0 lx | Real-world | 91.1% ± 0.6% | +0.550 ± 0.030 m |
-| Evening 21:00  | 0.3 lx | Simulation | 93.6% ± 3.8% | +1.390 ± 0.020 m |
-| Evening 21:00  | 0.3 lx | Real-world | 83.2% ± 4.2% | +0.470 ± 0.030 m |
-| Midnight 00:00 | 0.1 lx | Simulation | 84.3% ± 8.3% | +1.260 ± 0.080 m |
+| Twilight 19:00 | 3.0 lx | Simulation | 90.1% ± 6.4% | +1.430 ± 0.200 m |
+| Twilight 19:00 | 3.0 lx | Real-world | 92.3% ± 0.4% | +0.520 ± 0.020 m |
+| Evening 21:00  | 0.3 lx | Simulation | 84.0% ± 15.3% | +1.370 ± 0.050 m |
+| Evening 21:00  | 0.3 lx | Real-world | 83.2% ± 4.2% | +0.420 ± 0.010 m |
+| Midnight 00:00 | 0.1 lx | Simulation | 80.8% ± 8.3% | +1.270 ± 0.070 m |
 | Midnight 00:00 | 0.1 lx | Real-world | 37.8% ± 3.8% | +0.170 ± 0.030 m |
 
 **Key observations:**
 
-- **Twilight (3.0 lx):** Sim and real match closely (~91%), confirming good fidelity at the highest light level tested.
-- **Evening (0.3 lx):** A ~10 pp gap emerges — the real sensor degrades faster than the simulation as ambient light falls below 1 lx.
-- **Midnight (0.1 lx):** Largest divergence — real-world detection collapses to 38% while simulation holds at 84%. The Gazebo model overestimates sensor performance at extreme low-light; the physical spotlight has a narrower effective cone and the real sensor has higher noise than the model assumes.
-- **Depth error:** Real-world errors are ~0.8 m smaller than simulation. The simulation bias is an artifact of the screencast pipeline: intrinsics for a 1920×1080 sensor were scaled to the ~440×250 screen recording. Real-world videos at 1280×720 do not carry this offset.
-- **Run consistency:** Real-world variance is tighter (e.g., ±0.6% at 19h) than simulation (±7.4%), reflecting more controlled physical conditions vs. GPU-dependent Gazebo frame rates.
+- **Twilight (3.0 lx):** Sim and real still match closely (~90–92%), confirming good fidelity at the highest light level tested.
+- **Evening (0.3 lx):** Mean detection rate now tracks real-world closely (84.0% sim vs 83.2% real), but simulation variance jumped to ±15.3% (from ±3.8% with 3 runs) — driven by `sim_21h_run4`, which detected at only 55.0%, well below the other four runs (83–99%). That run's frames are also ~21% dimmer on average than the other Evening runs despite an identical world file, pointing to a rendering-pipeline difference (this run was recorded under CPU/software rendering as a workaround for a host GPU driver issue) rather than genuine scenario variance.
+- **Midnight (0.1 lx):** Largest divergence — real-world detection collapses to 38% while simulation holds at ~81%. The Gazebo model overestimates sensor performance at extreme low-light; the physical spotlight has a narrower effective cone and the real sensor has higher noise than the model assumes.
+- **Depth error:** Real-world errors are ~0.9 m smaller than simulation. The simulation bias is an artifact of the screencast pipeline: intrinsics for a 1920×1080 sensor were scaled to the ~440×250 screen recording. Real-world videos at 1280×720 do not carry this offset.
+- **Run consistency:** Real-world variance is still tighter (e.g., ±0.4% at 19h) than simulation, reflecting more controlled physical conditions vs. GPU-dependent Gazebo frame rates — and, for Evening specifically, a mixed-rendering-backend artifact in the newest runs (see above).
 
 <details>
 <summary>Per-run breakdown</summary>
@@ -75,25 +75,33 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 | Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
 | Twilight 19:00 | 3.0 lx | run1 | 81.2% | +1.264 m |
-| Twilight 19:00 | 3.0 lx | run2 | 96.2% | +1.373 m |
+| Twilight 19:00 | 3.0 lx | run2 | 96.4% | +1.373 m |
 | Twilight 19:00 | 3.0 lx | run3 | 97.6% | +1.365 m |
-| Evening 21:00  | 0.3 lx | run1 | 89.4% | +1.371 m |
-| Evening 21:00  | 0.3 lx | run2 | 92.6% | +1.386 m |
+| Twilight 19:00 | 3.0 lx | run4 | 91.1% | +1.319 m |
+| Twilight 19:00 | 3.0 lx | run5 | 84.4% | +1.824 m |
+| Evening 21:00  | 0.3 lx | run1 | 90.2% | +1.379 m |
+| Evening 21:00  | 0.3 lx | run2 | 93.1% | +1.389 m |
 | Evening 21:00  | 0.3 lx | run3 | 98.7% | +1.408 m |
-| Midnight 00:00 | 0.1 lx | run1 | 77.6% | +1.191 m |
-| Midnight 00:00 | 0.1 lx | run2 | 95.9% | +1.378 m |
-| Midnight 00:00 | 0.1 lx | run3 | 79.3% | +1.218 m |
+| Evening 21:00  | 0.3 lx | run4 | 55.0% ⚠️ | +1.272 m |
+| Evening 21:00  | 0.3 lx | run5 | 83.0% | +1.410 m |
+| Midnight 00:00 | 0.1 lx | run1 | 78.0% | +1.196 m |
+| Midnight 00:00 | 0.1 lx | run2 | 97.0% | +1.388 m |
+| Midnight 00:00 | 0.1 lx | run3 | 79.5% | +1.220 m |
+| Midnight 00:00 | 0.1 lx | run4 | 74.1% | +1.283 m |
+| Midnight 00:00 | 0.1 lx | run5 | 75.6% | +1.260 m |
+
+⚠️ `sim_21h_run4` recorded ~21% dimmer than the other Evening runs (mean frame brightness 11.9 vs 15.2) despite the same world file — the run used CPU/software Gazebo rendering (a temporary workaround for a host GPU driver mismatch) instead of the GPU-accelerated path used for every other run. Treat this run's detection rate as a rendering-backend artifact, not a scenario result.
 
 **Real-World**
 
 | Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | run1 | 91.3% | +0.590 m |
-| Twilight 19:00 | 3.0 lx | run2 | 90.4% | +0.516 m |
-| Twilight 19:00 | 3.0 lx | run3 | 91.8% | +0.531 m |
-| Evening 21:00  | 0.3 lx | run1 | 89.1% | +0.429 m |
-| Evening 21:00  | 0.3 lx | run2 | 80.6% | +0.488 m |
-| Evening 21:00  | 0.3 lx | run3 | 80.0% | +0.494 m |
+| Twilight 19:00 | 3.0 lx | run1 | 92.8% | +0.541 m |
+| Twilight 19:00 | 3.0 lx | run2 | 91.8% | +0.504 m |
+| Twilight 19:00 | 3.0 lx | run3 | 92.4% | +0.526 m |
+| Evening 21:00  | 0.3 lx | run1 | 89.1% | +0.403 m |
+| Evening 21:00  | 0.3 lx | run2 | 80.6% | +0.426 m |
+| Evening 21:00  | 0.3 lx | run3 | 80.0% | +0.432 m |
 | Midnight 00:00 | 0.1 lx | run1 | 32.6% | +0.143 m |
 | Midnight 00:00 | 0.1 lx | run2 | 39.4% | +0.210 m |
 | Midnight 00:00 | 0.1 lx | run3 | 41.4% | +0.162 m |
