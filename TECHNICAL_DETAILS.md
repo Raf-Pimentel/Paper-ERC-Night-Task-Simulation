@@ -19,10 +19,10 @@ This document records every parameter, configuration value, and design decision 
 | Render engine | OGRE2 (via gz-rendering) |
 | ROS–Gazebo bridge | ros_gz_bridge (Jazzy) |
 | Python | 3.x (system) |
-| OpenCV | 4.6.x (cv2) |
-| NumPy | 1.x |
+| OpenCV | 4.10.0 (`opencv-contrib-python`, pinned in `requirements.txt`) |
+| NumPy | 2.2.6 (pinned in `requirements.txt`) |
 
-The simulation runs entirely inside Docker. The container must have GUI access for Gazebo (`xhost +local:root` on the host before starting).
+The simulation runs entirely inside Docker, built from the repo's `Dockerfile` (base image pinned by digest). The container must have GUI access for Gazebo (`xhost +local:root` on the host before starting). `process_recordings.py` runs against the pinned versions in `requirements.txt` — the distro's `python3-opencv` package (4.5.x) is not used, as its ArUco detector behaves differently under low light.
 
 ---
 
@@ -82,9 +82,9 @@ The principal point is at the image centre: `cx = 960 px`, `cy = 540 px`. Distor
 | Marker ID | 0 |
 | Physical size | 0.20 m × 0.20 m |
 | Texture file | `models/aruco_target/materials/textures/NewArUco.png` |
-| Texture generation | `cv2.aruco.drawMarker(DICT_7X7_50, id=0, sidePixels=400)` on a 512×512 white canvas with 56 px padding |
+| Texture generation | `cv2.aruco.generateImageMarker(DICT_7X7_50, id=0, sidePixels=400)` on a 512×512 white canvas with 56 px padding |
 
-The texture must be generated inside the container after first launch because it depends on the installed OpenCV version (see README §1).
+The texture must be generated inside the container after first launch because it depends on the installed OpenCV version (see README §1). `generateImageMarker`/`getPredefinedDictionary` are the OpenCV ≥4.7 API; the older `drawMarker`/`Dictionary_get` calls were removed upstream and no longer exist in the pinned version.
 
 ---
 
@@ -237,7 +237,7 @@ Different dictionaries are used per source because the physical and simulated ma
 | Simulation | `DICT_7X7_50` | 0 | `cv2.aruco.detectMarkers` |
 | Real-world | `DICT_ARUCO_ORIGINAL` | 297 | `cv2.aruco.detectMarkers` |
 
-`DetectorParameters`: `DetectorParameters_create()` is used for OpenCV < 4.7 compatibility (the default `DetectorParameters()` constructor segfaults in OpenCV 4.6.x). All other detector parameters are at their OpenCV defaults.
+`DetectorParameters`: the pipeline calls `DetectorParameters_create()` when available (OpenCV < 4.7) and falls back to the `DetectorParameters()` constructor otherwise; the pinned OpenCV 4.10 build uses the latter. All other detector parameters are at their OpenCV defaults.
 
 Detection is performed on a grayscale conversion of each frame (`cv2.COLOR_BGR2GRAY`).
 
@@ -424,7 +424,7 @@ The simulation videos are screen recordings of the Gazebo viewport at approximat
 
 1. The Gazebo viewport FOV differs from the sensor FOV defined in the SDF
 2. UI chrome (title bars, padding) reduces the actual image area below the reported resolution
-3. Non-standard aspect ratios cause per-axis scaling errors
+3. Non-standard aspect ratios cause per-axis scaling errors, and the exact crop resolution varies slightly between recording sessions (e.g. ~440–456 px wide across the original runs vs. a uniform 448×267 for later runs)
 
 The result is an underestimated focal length (`fx_scaled ≈ 340 px` instead of ~968 px), which inflates all depth estimates by approximately +0.8 m. **This is why simulation depth errors are ~0.8 m larger than real-world errors.**
 
@@ -454,29 +454,29 @@ The real-world marker trajectory was performed manually, approximating the simul
 
 ## 8. Results Summary
 
-### 8.1 Simulation
+### 8.1 Simulation (5 runs per scenario)
 
 | Scenario | Target Lux | Detection Rate (mean ± std) | Mean Depth Error (mean ± std) | Mean Brightness |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | 91.7% ± 7.4% | +1.330 ± 0.050 m | 44.2 |
-| Evening 21:00 | 0.3 lx | 93.6% ± 3.8% | +1.390 ± 0.020 m | 15.2 |
-| Midnight 00:00 | 0.1 lx | 84.3% ± 8.3% | +1.260 ± 0.080 m | 5.0 |
+| Twilight 19:00 | 3.0 lx | 90.1% ± 6.4% | +1.430 ± 0.200 m | 44.2 |
+| Evening 21:00 | 0.3 lx | 84.0% ± 15.3% | +1.370 ± 0.050 m | 13.9 |
+| Midnight 00:00 | 0.1 lx | 80.8% ± 8.3% | +1.270 ± 0.070 m | 5.0 |
 
-### 8.2 Real-World
+### 8.2 Real-World (3 runs per scenario)
 
 | Scenario | Target Lux | Detection Rate (mean ± std) | Mean Depth Error (mean ± std) | Mean Brightness |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | 91.1% ± 0.6% | +0.550 ± 0.030 m | 58.8 |
-| Evening 21:00 | 0.3 lx | 83.2% ± 4.2% | +0.470 ± 0.030 m | 12.3 |
+| Twilight 19:00 | 3.0 lx | 92.3% ± 0.4% | +0.520 ± 0.020 m | 58.8 |
+| Evening 21:00 | 0.3 lx | 83.2% ± 4.2% | +0.420 ± 0.010 m | 12.3 |
 | Midnight 00:00 | 0.1 lx | 37.8% ± 3.8% | +0.170 ± 0.030 m | 6.1 |
 
 ### 8.3 Sim-to-Real Gap
 
 | Scenario | Sim DSR | Real DSR | Gap (pp) | Interpretation |
 |---|---|---|---|---|
-| Twilight 19:00 | 91.7% | 91.1% | −0.6 | Excellent fidelity |
-| Evening 21:00 | 93.6% | 83.2% | −10.4 | Moderate divergence |
-| Midnight 00:00 | 84.3% | 37.8% | −46.5 | Simulator overoptimistic |
+| Twilight 19:00 | 90.1% | 92.3% | +2.2 | Excellent fidelity |
+| Evening 21:00 | 84.0% | 83.2% | −0.8 | Excellent fidelity |
+| Midnight 00:00 | 80.8% | 37.8% | −43.0 | Simulator overoptimistic |
 
 ---
 
@@ -516,6 +516,8 @@ Outputs `results/summary/sim_vs_real_comparison.csv`.
 
 | File | Purpose |
 |---|---|
+| `Dockerfile` | Pinned simulation environment (base image by digest + `requirements.txt`) |
+| `requirements.txt` | Pinned Python dependencies for `process_recordings.py` |
 | `process_recordings.py` | Main post-processing pipeline |
 | `src/uwb_erc_sim/worlds/night_task_19h.sdf` | Twilight scenario world (3.0 lx) |
 | `src/uwb_erc_sim/worlds/night_task_21h.sdf` | Evening scenario world (0.3 lx) |
@@ -523,9 +525,9 @@ Outputs `results/summary/sim_vs_real_comparison.csv`.
 | `src/uwb_erc_sim/scripts/fly_square.py` | Marker trajectory controller |
 | `src/uwb_erc_sim/scripts/erc_vision_eval.py` | Live ROS detection + evaluation node |
 | `src/uwb_erc_sim/scripts/light_calibration.py` | SDF diffuse ↔ lux calibration tool |
-| `recordings/sim_*.mp4` | Gazebo screencast recordings (9 runs) |
+| `recordings/sim_*.mp4` | Gazebo screencast recordings (15 runs) |
 | `recordings/real_*.mp4` | Real-world experiment recordings (9 runs) |
 | `results/raw/*_raw.csv` | Per-frame detection data |
 | `results/summary/*_summary.csv` | Per-run aggregated statistics |
-| `results/summary/all_scenarios_summary.csv` | All 18 runs combined |
+| `results/summary/all_scenarios_summary.csv` | All 24 runs combined |
 | `results/summary/sim_vs_real_comparison.csv` | Aggregated sim-vs-real table |
