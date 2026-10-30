@@ -21,14 +21,14 @@ The European Rover Challenge (ERC) Night Task requires reliable perception in ne
 | Framework | ROS2 Jazzy |
 | Simulator | Gazebo Harmonic (gz-sim 8) |
 | Camera | Intel RealSense D435i |
-| Vision | OpenCV ArUco (`DICT_7X7_50` in sim / `DICT_ARUCO_ORIGINAL` in real) |
+| Vision | OpenCV ArUco (`DICT_7X7_50` ID 0 in the original sim runs / `DICT_ARUCO_ORIGINAL` ID 297 in real and in the same-marker sim runs) |
 | Visualization | RViz2 |
 
 ---
 
 ## Results
 
-Five simulation runs and three real-world runs were performed per lighting condition. Tables report mean ± std dev across runs.
+Three conditions were compared per lighting level: **simulation with a different marker** (`DICT_7X7_50` ID 0, five runs), **simulation with the same marker as the real experiment** (`DICT_ARUCO_ORIGINAL` ID 297, five runs), and **real-world** (`DICT_ARUCO_ORIGINAL` ID 297, three runs). Tables report mean ± std dev across runs.
 
 ### Simulation (Gazebo)
 
@@ -37,6 +37,16 @@ Five simulation runs and three real-world runs were performed per lighting condi
 | Twilight 19:00 | 3.0 lx | 90.1% ± 6.4% | +1.430 ± 0.200 m |
 | Evening 21:00  | 0.3 lx | 84.0% ± 15.3% | +1.370 ± 0.050 m |
 | Midnight 00:00 | 0.1 lx | 80.8% ± 8.3% | +1.270 ± 0.070 m |
+
+### Simulation, same marker as real-world (Gazebo, ID 297)
+
+Same worlds, lighting, and trajectory as above (`worlds/night_task_*_id297.sdf`); only the marker texture changes to `DICT_ARUCO_ORIGINAL` ID 297, the marker used in the UWB recordings.
+
+| Scenario | Target Lux | Detection Rate | Mean Depth Error |
+|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | 95.3% ± 3.3% | +1.420 ± 0.040 m |
+| Evening 21:00  | 0.3 lx | 99.7% ± 0.3% | +1.450 ± 0.030 m |
+| Midnight 00:00 | 0.1 lx | 93.6% ± 5.0% | +1.430 ± 0.050 m |
 
 ### Real-World (UWB Workshop)
 
@@ -48,24 +58,37 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 | Evening 21:00  | 0.3 lx | 83.2% ± 4.2% | +0.420 ± 0.010 m |
 | Midnight 00:00 | 0.1 lx | 37.8% ± 3.8% | +0.170 ± 0.030 m |
 
-### Sim-to-Real Comparison
+### Three-Way Comparison
 
 | Scenario | Target Lux | Source | Detection Rate | Mean Depth Error |
 |---|---|---|---|---|
-| Twilight 19:00 | 3.0 lx | Simulation | 90.1% ± 6.4% | +1.430 ± 0.200 m |
-| Twilight 19:00 | 3.0 lx | Real-world | 92.3% ± 0.4% | +0.520 ± 0.020 m |
-| Evening 21:00  | 0.3 lx | Simulation | 84.0% ± 15.3% | +1.370 ± 0.050 m |
-| Evening 21:00  | 0.3 lx | Real-world | 83.2% ± 4.2% | +0.420 ± 0.010 m |
-| Midnight 00:00 | 0.1 lx | Simulation | 80.8% ± 8.3% | +1.270 ± 0.070 m |
-| Midnight 00:00 | 0.1 lx | Real-world | 37.8% ± 3.8% | +0.170 ± 0.030 m |
+| Twilight 19:00 | 3.0 lx | Simulation (7x7 ID 0) | 90.1% ± 6.4% | +1.430 ± 0.200 m |
+| Twilight 19:00 | 3.0 lx | Simulation (same marker, ID 297) | 95.3% ± 3.3% | +1.420 ± 0.040 m |
+| Twilight 19:00 | 3.0 lx | Real-world (ID 297) | 92.3% ± 0.4% | +0.520 ± 0.020 m |
+| Evening 21:00  | 0.3 lx | Simulation (7x7 ID 0) | 84.0% ± 15.3% | +1.370 ± 0.050 m |
+| Evening 21:00  | 0.3 lx | Simulation (same marker, ID 297) | 99.7% ± 0.3% | +1.450 ± 0.030 m |
+| Evening 21:00  | 0.3 lx | Real-world (ID 297) | 83.2% ± 4.2% | +0.420 ± 0.010 m |
+| Midnight 00:00 | 0.1 lx | Simulation (7x7 ID 0) | 80.8% ± 8.3% | +1.270 ± 0.070 m |
+| Midnight 00:00 | 0.1 lx | Simulation (same marker, ID 297) | 93.6% ± 5.0% | +1.430 ± 0.050 m |
+| Midnight 00:00 | 0.1 lx | Real-world (ID 297) | 37.8% ± 3.8% | +0.170 ± 0.030 m |
+
+Detection-rate differences in percentage points:
+
+| Scenario | Marker effect in sim (ID 297 − 7x7) | Real − sim (7x7), original comparison | Real − sim (same marker) |
+|---|---|---|---|
+| Twilight 19:00 | +5.2 | +2.2 | −3.0 |
+| Evening 21:00  | +15.7 | −0.8 | −16.4 |
+| Midnight 00:00 | +12.8 | −43.0 | −55.8 |
 
 **Key observations:**
 
-- **Twilight (3.0 lx):** Sim and real still match closely (~90–92%), confirming good fidelity at the highest light level tested.
-- **Evening (0.3 lx):** Mean detection rate tracks real-world closely (84.0% sim vs 83.2% real); `sim_21h_run4` is a low outlier (55.0%) that widens the simulation std dev.
-- **Midnight (0.1 lx):** Largest divergence — real-world detection collapses to 38% while simulation holds at ~81%. The Gazebo model overestimates sensor performance at extreme low-light; the physical spotlight has a narrower effective cone and the real sensor has higher noise than the model assumes.
-- **Depth error:** Real-world errors are ~0.9 m smaller than simulation, an artifact of the screencast pipeline (see note below).
-- **Run consistency:** Real-world variance is tighter (e.g., ±0.4% at 19h) than simulation, reflecting more controlled physical conditions vs. GPU-dependent Gazebo frame rates.
+- **The marker is not the cause of the midnight gap.** With the identical marker, simulation still detects it in 93.6% of frames at 0.1 lx versus 37.8% in the real recordings, so the gap widens from 43.0 to 55.8 points instead of closing. This points back to the missing sensor-noise model (no read noise, shot noise, or IR-projector speckle) rather than to the marker choice.
+- **The ID 297 marker is easier to detect in simulation at every light level** (+5.2, +15.7, +12.8 points). It is a 5×5-bit marker, so each cell is larger at the same 0.20 m physical size, which helps in the low-resolution (~450×255) screencasts. The original 7x7 results therefore understated simulated detectability.
+- **The close match at 0.3 lx was partly coincidental.** Simulation (7x7) and real agreed within 0.8 points, but with the same marker simulation reaches 99.7% against 83.2% real, a 16.4-point gap. The original 7x7 mean was also pulled down by the `sim_21h_run4` outlier (55.0%). Treat fidelity at 0.3 lx as less established than the first comparison suggested.
+- **Twilight (3.0 lx)** is the only level where all three conditions agree within about 5 points.
+- **Detection is not monotonic in light level for the ID 297 simulation:** 0.3 lx (99.7%) is higher than 3.0 lx (95.3%), driven by three 19h runs near 92.5%. This dataset does not explain why.
+- **Depth error:** both simulation conditions sit around +1.3 to +1.5 m while the real recordings are 0.2 to 0.5 m. This is the screencast-intrinsics artifact described below, so it does not distinguish the two simulation conditions.
+- **Run consistency:** real-world variance is tighter than simulation at 3.0 lx (±0.4%), reflecting controlled physical conditions vs. GPU-dependent Gazebo frame rates. With 5 and 3 runs per condition and large spreads in places, differences of a few points are not conclusive.
 
 <details>
 <summary>Per-run breakdown</summary>
@@ -89,6 +112,26 @@ Physical experiments used a D435i camera and synchronized spotlight, filmed at 1
 | Midnight 00:00 | 0.1 lx | run3 | 79.5% | +1.220 m |
 | Midnight 00:00 | 0.1 lx | run4 | 74.1% | +1.283 m |
 | Midnight 00:00 | 0.1 lx | run5 | 75.6% | +1.260 m |
+
+**Simulation, same marker (ID 297)**
+
+| Scenario | Target Lux | Run | Detection Rate | Mean Depth Error |
+|---|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | run1 | 92.7% | +1.403 m |
+| Twilight 19:00 | 3.0 lx | run2 | 99.9% | +1.450 m |
+| Twilight 19:00 | 3.0 lx | run3 | 98.8% | +1.470 m |
+| Twilight 19:00 | 3.0 lx | run4 | 92.6% | +1.390 m |
+| Twilight 19:00 | 3.0 lx | run5 | 92.5% | +1.381 m |
+| Evening 21:00  | 0.3 lx | run1 | 99.9% | +1.444 m |
+| Evening 21:00  | 0.3 lx | run2 | 99.4% | +1.425 m |
+| Evening 21:00  | 0.3 lx | run3 | 99.4% | +1.492 m |
+| Evening 21:00  | 0.3 lx | run4 | 100.0% | +1.412 m |
+| Evening 21:00  | 0.3 lx | run5 | 99.7% | +1.475 m |
+| Midnight 00:00 | 0.1 lx | run1 | 84.2% | +1.348 m |
+| Midnight 00:00 | 0.1 lx | run2 | 93.9% | +1.498 m |
+| Midnight 00:00 | 0.1 lx | run3 | 95.7% | +1.430 m |
+| Midnight 00:00 | 0.1 lx | run4 | 95.1% | +1.418 m |
+| Midnight 00:00 | 0.1 lx | run5 | 99.3% | +1.454 m |
 
 **Real-World**
 
@@ -184,13 +227,16 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/gz-sim-8/plugins:${GZ
 export GZ_SIM_RESOURCE_PATH=/ros2_ws/src/uwb_erc_sim/models:${GZ_SIM_RESOURCE_PATH}
 ```
 
-Launch a scenario:
+Launch a scenario (the `_id297` worlds are identical except that the marker is `DICT_ARUCO_ORIGINAL` ID 297, as in the real recordings):
 
 | Scenario | Command |
 |---|---|
 | Twilight 19:00 (3.0 lx) | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_19h.sdf` |
 | Evening 21:00 (0.3 lx) | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_21h.sdf` |
 | Midnight 00:00 (0.1 lx) | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_midnight.sdf` |
+| Twilight 19:00, ID 297 marker | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_19h_id297.sdf` |
+| Evening 21:00, ID 297 marker | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_21h_id297.sdf` |
+| Midnight 00:00, ID 297 marker | `gz sim /ros2_ws/src/uwb_erc_sim/worlds/night_task_midnight_id297.sdf` |
 
 After Gazebo opens: press **Play**, then click **⋮ menu (top-right)** → **Image Display** to see the camera feed.
 
@@ -237,14 +283,14 @@ pip install -r requirements.txt
 # Process a single video
 python3 process_recordings.py --video recordings/real_19h_run1.mp4 --scenario 19h
 
-# Process all videos in recordings/ (sim_* and real_*)
+# Process all videos in recordings/ (sim_*, sim_id297_* and real_*)
 python3 process_recordings.py --all
 
 # Rebuild the sim-vs-real comparison from existing summaries
 python3 process_recordings.py --compare
 ```
 
-Videos must be named `sim_<scenario>_run<N>.mp4` or `real_<scenario>_run<N>.mp4` where `<scenario>` is `19h`, `21h`, or `midnight`.
+Videos must be named `sim_<scenario>_run<N>.mp4` (simulation, `DICT_7X7_50` ID 0), `sim_id297_<scenario>_run<N>.mp4` (simulation with the real-world marker, `DICT_ARUCO_ORIGINAL` ID 297), or `real_<scenario>_run<N>.mp4`, where `<scenario>` is `19h`, `21h`, or `midnight`.
 
 ---
 
@@ -259,6 +305,7 @@ Videos must be named `sim_<scenario>_run<N>.mp4` or `real_<scenario>_run<N>.mp4`
 │   ├── sim_19h_run1.mp4 .. run5.mp4
 │   ├── sim_21h_run1.mp4 .. run5.mp4
 │   ├── sim_midnight_run1.mp4 .. run5.mp4
+│   ├── sim_id297_19h_run1.mp4 .. run5.mp4      # same marker as real (also 21h, midnight)
 │   ├── real_19h_run1.mp4 .. run3.mp4
 │   ├── real_21h_run1.mp4 .. run3.mp4
 │   └── real_midnight_run1.mp4 .. run3.mp4
@@ -284,6 +331,7 @@ Videos must be named `sim_<scenario>_run<N>.mp4` or `real_<scenario>_run<N>.mp4`
         ├── night_task_19h.sdf         # Twilight — 3.0 lx
         ├── night_task_21h.sdf         # Evening — 0.3 lx
         ├── night_task_midnight.sdf    # Midnight — 0.1 lx
+        ├── night_task_*_id297.sdf     # Same three worlds with the ID 297 marker
         └── standard.sdf
 ```
 

@@ -1,0 +1,2 @@
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Twilight 19:00,simulation-id297,3.0,916,905,98.8,1.47033,0.77487,-0.31926,0.4985,-1.3608,0.47636,43.03,recordings/sim_id297_19h_run3.mp4

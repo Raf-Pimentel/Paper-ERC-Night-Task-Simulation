@@ -1,0 +1,2 @@
+scenario,source,target_lux,total_frames,detected_frames,detection_rate_pct,mean_err_x,std_err_x,mean_err_y,std_err_y,mean_err_z,std_err_z,mean_brightness,source_video
+Midnight 00:00,simulation-id297,0.1,950,903,95.05,1.41794,0.78202,-0.36101,0.49322,-1.25406,0.43785,5.1,recordings/sim_id297_midnight_run4.mp4

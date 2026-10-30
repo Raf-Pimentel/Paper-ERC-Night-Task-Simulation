@@ -3,13 +3,16 @@
 process_recordings.py  —  ERC Night Task: Video Processing Pipeline
 ====================================================================
 Processes recordings of Gazebo simulations and real-world experiments,
-detects DICT_7X7_50 ArUco markers frame-by-frame, and saves structured
-CSV results.
+detects ArUco markers frame-by-frame (DICT_7X7_50 ID 0, or
+DICT_ARUCO_ORIGINAL ID 297 for real-world and same-marker simulation), and
+saves structured CSV results.
 
 Naming convention
 -----------------
   Simulation  : sim_<scenario>_run<N>.mp4   (e.g. sim_19h_run1.mp4)
   Real-world  : real_<scenario>_run<N>.mp4  (e.g. real_19h_run1.mp4)
+  Simulation, same marker as real-world (DICT_ARUCO_ORIGINAL ID 297):
+                sim_id297_<scenario>_run<N>.mp4 (e.g. sim_id297_19h_run1.mp4)
   <scenario>  : 19h | 21h | midnight
 
 Usage:
@@ -46,7 +49,8 @@ Summary CSV columns:
     mean_brightness, source_video
 
 Notes:
-    - The ArUco dictionary used is DICT_7X7_50 (matches the simulation model).
+    - The ArUco dictionary is chosen from the filename prefix: sim_ -> DICT_7X7_50,
+      real_ and sim_id297_ -> DICT_ARUCO_ORIGINAL (matches the marker in each recording).
     - Ground-truth marker pose: world (x=2.0, y=0.0, z=1.0) — same for sim and real.
     - Camera intrinsics match the D435i profile (1920×1080, H-FOV=1.204 rad).
     - If the video resolution differs from 1920×1080, intrinsics are scaled automatically.
@@ -88,7 +92,8 @@ DIST_COEFFS = np.zeros((4, 1), dtype=np.float64)
 
 # ArUco dictionaries
 # Simulation uses DICT_7X7_50 (matches the model SDF texture).
-# Real-world marker is from DICT_ARUCO_ORIGINAL (ID 297).
+# Real-world marker is from DICT_ARUCO_ORIGINAL (ID 297); the sim_id297_ simulation
+# runs (worlds night_task_*_id297.sdf) use that same marker.
 ARUCO_DICT_SIM  = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_7X7_50)
 ARUCO_DICT_REAL = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
 # DetectorParameters_create() required for OpenCV < 4.7; DetectorParameters() segfaults in 4.6.x
@@ -144,12 +149,21 @@ def marker_area(corners) -> float:
 # Core processing
 # ---------------------------------------------------------------------------
 
+SOURCE_REAL     = "real-world"
+SOURCE_SIM      = "simulation"
+SOURCE_SIM_297  = "simulation-id297"
+# Sources whose marker is DICT_ARUCO_ORIGINAL ID 297
+ORIGINAL_DICT_SOURCES = (SOURCE_REAL, SOURCE_SIM_297)
+
+
 def _infer_source(video_path: str) -> str:
-    """Return 'simulation' or 'real-world' based on the filename prefix."""
+    """Return the source ('simulation', 'simulation-id297' or 'real-world') from the filename prefix."""
     stem = Path(video_path).stem.lower()
     if stem.startswith("real_"):
-        return "real-world"
-    return "simulation"
+        return SOURCE_REAL
+    if stem.startswith("sim_id297_"):
+        return SOURCE_SIM_297
+    return SOURCE_SIM
 
 
 def process_video(video_path: str, scenario: str) -> dict:
@@ -169,7 +183,7 @@ def process_video(video_path: str, scenario: str) -> dict:
     scen_label   = scen_info["label"]
     video_stem   = Path(video_path).stem
     source       = _infer_source(video_path)
-    aruco_dict   = ARUCO_DICT_REAL if source == "real-world" else ARUCO_DICT_SIM
+    aruco_dict   = ARUCO_DICT_REAL if source in ORIGINAL_DICT_SOURCES else ARUCO_DICT_SIM
 
     # Ensure output dirs exist
     RAW_DIR.mkdir(parents=True, exist_ok=True)
@@ -188,7 +202,7 @@ def process_video(video_path: str, scenario: str) -> dict:
 
     camera_matrix = scale_camera_matrix(BASE_CAMERA_MATRIX, frame_w, frame_h)
 
-    dict_name = "DICT_ARUCO_ORIGINAL" if source == "real-world" else "DICT_7X7_50"
+    dict_name = "DICT_ARUCO_ORIGINAL" if source in ORIGINAL_DICT_SOURCES else "DICT_7X7_50"
     print(f"\n{'='*60}")
     print(f"Video      : {video_path}")
     print(f"Source     : {source}  [{dict_name}]")
@@ -348,7 +362,7 @@ def build_comparison(all_summaries: list[dict]) -> None:
 
     rows = []
     scenario_order = ["Twilight 19:00", "Evening 21:00", "Midnight 00:00"]
-    source_order   = ["simulation", "real-world"]
+    source_order   = [SOURCE_SIM, SOURCE_SIM_297, SOURCE_REAL]
 
     for scen in scenario_order:
         for src in source_order:
@@ -391,11 +405,11 @@ def build_comparison(all_summaries: list[dict]) -> None:
     print(f"\n{'='*60}")
     print("Sim-vs-Real Comparison")
     print(f"{'='*60}")
-    print(f"{'Scenario':<20} {'Source':<12} {'Lux':>5}  "
+    print(f"{'Scenario':<20} {'Source':<18} {'Lux':>5}  "
           f"{'Det.Rate':>10}  {'Depth Err':>10}  {'Brightness':>10}")
-    print("-" * 75)
+    print("-" * 81)
     for r in rows:
-        print(f"{r['scenario']:<20} {r['source']:<12} {r['target_lux']:>5}  "
+        print(f"{r['scenario']:<20} {r['source']:<18} {r['target_lux']:>5}  "
               f"{r['mean_detection_rate']:>7.1f}±{r['std_detection_rate']:<4.1f}  "
               f"{r['mean_depth_err']:>+7.3f}±{r['std_depth_err']:<5.3f}  "
               f"{r['mean_brightness']:>10.2f}")
@@ -405,7 +419,7 @@ def build_comparison(all_summaries: list[dict]) -> None:
 def process_all():
     """
     Scan the recordings/ folder and process all videos whose names match
-    sim_<scenario>_*.mp4 or real_<scenario>_*.mp4.
+    sim_<scenario>_*.mp4, sim_id297_<scenario>_*.mp4 or real_<scenario>_*.mp4.
     After processing, generate a combined summary and a sim-vs-real comparison.
     """
     recordings_dir = Path("recordings")
@@ -423,9 +437,9 @@ def process_all():
     results = []
     for video_path in videos_found:
         stem = video_path.stem.lower()
-        if not (stem.startswith("sim_") or stem.startswith("real_")):
+        if not stem.startswith(("sim_", "sim_id297_", "real_")):
             print(f"  Skipping {video_path.name} — "
-                  f"filename must start with 'sim_' or 'real_'.")
+                  f"filename must start with 'sim_', 'sim_id297_' or 'real_'.")
             continue
 
         scenario = None
@@ -495,7 +509,7 @@ def main():
                         choices=list(SCENARIOS.keys()),
                         help="Scenario for this recording: 19h | 21h | midnight")
     parser.add_argument("--all",      action="store_true",
-                        help="Process all sim_/real_ .mp4 files in recordings/")
+                        help="Process all sim_/sim_id297_/real_ .mp4 files in recordings/")
     parser.add_argument("--compare",  action="store_true",
                         help="Rebuild sim-vs-real comparison from existing summary CSVs")
     args = parser.parse_args()

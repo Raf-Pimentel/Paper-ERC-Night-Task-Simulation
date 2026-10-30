@@ -84,6 +84,18 @@ The principal point is at the image centre: `cx = 960 px`, `cy = 540 px`. Distor
 | Texture file | `models/aruco_target/materials/textures/NewArUco.png` |
 | Texture generation | `cv2.aruco.generateImageMarker(DICT_7X7_50, id=0, sidePixels=400)` on a 512×512 white canvas with 56 px padding |
 
+**Same-marker variant (ID 297).** To compare simulation against the real recordings with an identical marker, a second texture is provided:
+
+| Parameter | Value |
+|---|---|
+| Dictionary | `DICT_ARUCO_ORIGINAL` (`cv2.aruco.DICT_ARUCO_ORIGINAL`) |
+| Marker ID | 297 |
+| Texture file | `models/aruco_target/materials/textures/ArUcoOriginal297.png` |
+| Texture generation | `cv2.aruco.generateImageMarker(DICT_ARUCO_ORIGINAL, id=297, sidePixels=400)` on a 512×512 white canvas with 56 px padding (same layout as the 7x7 texture) |
+| Worlds | `worlds/night_task_19h_id297.sdf`, `night_task_21h_id297.sdf`, `night_task_midnight_id297.sdf` |
+
+These worlds are copies of the original three with only the `albedo_map` path changed, so lighting, geometry, camera, and trajectory are identical. Physical size is the same 0.20 m × 0.20 m, but the ORIGINAL dictionary is a 5×5-bit marker (7×7 cells including the border) against 9×9 cells for `DICT_7X7_50`, so each cell is larger at equal size.
+
 The texture must be generated inside the container after first launch because it depends on the installed OpenCV version (see README §1). `generateImageMarker`/`getPredefinedDictionary` are the OpenCV ≥4.7 API; the older `drawMarker`/`Dictionary_get` calls were removed upstream and no longer exist in the pinned version.
 
 ---
@@ -224,18 +236,20 @@ All post-processing is done by `process_recordings.py`. Videos must be placed in
 | Source | Prefix | Example |
 |---|---|---|
 | Gazebo simulation (screencast) | `sim_` | `sim_19h_run1.mp4` |
+| Gazebo simulation, same marker as real (ID 297) | `sim_id297_` | `sim_id297_19h_run1.mp4` |
 | Real-world experiment | `real_` | `real_midnight_run2.mp4` |
 
-Valid scenario keywords: `19h`, `21h`, `midnight`.
+`sim_id297_` files also start with `sim_`; the pipeline checks the longer prefix first. Valid scenario keywords: `19h`, `21h`, `midnight`.
 
 ### 5.2 ArUco Detection Parameters
 
-Different dictionaries are used per source because the physical and simulated markers are different:
+The dictionary follows the marker shown in each recording:
 
 | Source | ArUco dictionary | Marker ID | Detection function |
 |---|---|---|---|
-| Simulation | `DICT_7X7_50` | 0 | `cv2.aruco.detectMarkers` |
-| Real-world | `DICT_ARUCO_ORIGINAL` | 297 | `cv2.aruco.detectMarkers` |
+| Simulation (`sim_`) | `DICT_7X7_50` | 0 | `cv2.aruco.detectMarkers` |
+| Simulation, same marker (`sim_id297_`) | `DICT_ARUCO_ORIGINAL` | 297 | `cv2.aruco.detectMarkers` |
+| Real-world (`real_`) | `DICT_ARUCO_ORIGINAL` | 297 | `cv2.aruco.detectMarkers` |
 
 `DetectorParameters`: the pipeline calls `DetectorParameters_create()` when available (OpenCV < 4.7) and falls back to the `DetectorParameters()` constructor otherwise; the pinned OpenCV 4.10 build uses the latter. All other detector parameters are at their OpenCV defaults.
 
@@ -470,13 +484,30 @@ The real-world marker trajectory was performed manually, approximating the simul
 | Evening 21:00 | 0.3 lx | 83.2% ± 4.2% | +0.420 ± 0.010 m | 12.3 |
 | Midnight 00:00 | 0.1 lx | 37.8% ± 3.8% | +0.170 ± 0.030 m | 6.1 |
 
-### 8.3 Sim-to-Real Gap
+### 8.3 Simulation with the Same Marker as Real-World (ID 297, 5 runs per scenario)
 
-| Scenario | Sim DSR | Real DSR | Gap (pp) | Interpretation |
+| Scenario | Target Lux | Detection Rate (mean ± std) | Mean Depth Error (mean ± std) | Mean Brightness |
 |---|---|---|---|---|
-| Twilight 19:00 | 90.1% | 92.3% | +2.2 | Excellent fidelity |
-| Evening 21:00 | 84.0% | 83.2% | −0.8 | Excellent fidelity |
-| Midnight 00:00 | 80.8% | 37.8% | −43.0 | Simulator overoptimistic |
+| Twilight 19:00 | 3.0 lx | 95.3% ± 3.3% | +1.420 ± 0.040 m | 43.0 |
+| Evening 21:00 | 0.3 lx | 99.7% ± 0.3% | +1.450 ± 0.030 m | 11.5 |
+| Midnight 00:00 | 0.1 lx | 93.6% ± 5.0% | +1.430 ± 0.050 m | 5.1 |
+
+### 8.4 Sim-to-Real Gap
+
+Detection Success Rate gap (real − simulation, percentage points):
+
+| Scenario | Sim 7x7 DSR | Sim ID 297 DSR | Real DSR | Gap vs sim 7x7 | Gap vs sim ID 297 | Marker effect in sim |
+|---|---|---|---|---|---|---|
+| Twilight 19:00 | 90.1% | 95.3% | 92.3% | +2.2 | −3.0 | +5.2 |
+| Evening 21:00 | 84.0% | 99.7% | 83.2% | −0.8 | −16.4 | +15.7 |
+| Midnight 00:00 | 80.8% | 93.6% | 37.8% | −43.0 | −55.8 | +12.8 |
+
+Reading the table:
+
+- Using the real marker in simulation does not close the midnight gap; it widens it from 43.0 to 55.8 points. The marker choice is therefore not what drives the divergence at 0.1 lx.
+- The ID 297 marker is detected more often in simulation at all three light levels. The simulation screencasts are about 450×255 px, and the 5×5-bit marker has larger cells than the 9×9-cell 7x7 marker, which likely helps at that resolution. This is a plausible explanation, not a tested one.
+- The 0.3 lx agreement between the original simulation and the real data (−0.8 points) does not hold with the same marker (−16.4 points). Part of the original agreement came from the harder 7x7 marker and the `sim_21h_run4` outlier (55.0%).
+- With 5 simulated and 3 real runs per condition and large spreads in places, differences of a few points should not be read as significant.
 
 ---
 
@@ -488,7 +519,7 @@ The real-world marker trajectory was performed manually, approximating the simul
 2. Generate the ArUco texture (see README §1)
 3. Open four terminal tabs and follow the run sequence in README §2–§5
 4. Screen-record the Gazebo viewport for approximately 30 seconds per scenario
-5. Save as `sim_<scenario>_run<N>.mp4` in `recordings/`
+5. Save as `sim_<scenario>_run<N>.mp4` in `recordings/` (or `sim_id297_<scenario>_run<N>.mp4` when using the `night_task_*_id297.sdf` worlds)
 6. Run: `python3 process_recordings.py --all`
 
 ### 9.2 Reproduce the Real-World Experiment

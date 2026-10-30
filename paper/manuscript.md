@@ -28,7 +28,7 @@ Received: xx xxx xxx; Revised: xx xxx xxx; Accepted: xx xxx xxx
 
 ## Abstract
 
-The European Rover Challenge (ERC) Night Task demands reliable autonomous navigation and docking in near-zero illumination environments, specifically in the 0.1–0.5 lux range where standard RGB imaging is susceptible to photon starvation. Existing simulation tools commonly fail to replicate the non-linear noise characteristics of depth cameras under such conditions, creating a gap between virtual testing and physical deployment. This paper presents a Sim-to-Real methodology using ROS2 Jazzy and Gazebo Harmonic to evaluate ArUco fiducial marker detection for a mobile rover equipped with an Intel RealSense D435i camera. A parameterised Gazebo camera and spotlight model was used to approximate the sensor's photometric behaviour across three illuminance scenarios: Twilight (3.0 lx), Evening (0.3 lx), and Midnight (0.1 lx). Detection Success Rate and depth estimation error were measured in simulation (five runs per scenario) and compared against physical experiments conducted at the University of West Bohemia (three runs per scenario). The simulation tracks physical detection performance closely down to 0.3 lx (within ~2 percentage points), then diverges sharply at 0.1 lx, where simulated detection remains high (80.8%) while physical detection collapses (37.8%) — a gap attributable to the absence of any sensor-noise model, IR speckle included, in the current virtual camera. The validated pipeline is directly applicable to the UWB Robotics team's pre-competition preparation and provides a scalable framework for testing autonomous vision systems in logistically constrained space exploration scenarios.
+The European Rover Challenge (ERC) Night Task demands reliable autonomous navigation and docking in near-zero illumination environments, specifically in the 0.1–0.5 lux range where standard RGB imaging is susceptible to photon starvation. Existing simulation tools commonly fail to replicate the non-linear noise characteristics of depth cameras under such conditions, creating a gap between virtual testing and physical deployment. This paper presents a Sim-to-Real methodology using ROS2 Jazzy and Gazebo Harmonic to evaluate ArUco fiducial marker detection for a mobile rover equipped with an Intel RealSense D435i camera. A parameterised Gazebo camera and spotlight model was used to approximate the sensor's photometric behaviour across three illuminance scenarios: Twilight (3.0 lx), Evening (0.3 lx), and Midnight (0.1 lx). Detection Success Rate and depth estimation error were measured in simulation (five runs per scenario) and compared against physical experiments conducted at the University of West Bohemia (three runs per scenario). Because the physical experiments used a different marker (`DICT_ARUCO_ORIGINAL`, ID 297) from the original simulation (`DICT_7X7_50`, ID 0), a further five runs per scenario were simulated with the physical marker, separating the effect of the marker from the effect of the sensor model. With the original marker the simulation tracks physical detection performance within ~2 percentage points at 3.0 lx and 0.3 lx, then diverges sharply at 0.1 lx, where simulated detection remains high (80.8%) while physical detection collapses (37.8%). With the identical marker, simulated detection is higher still (95.3%, 99.7%, and 93.6% at 3.0, 0.3, and 0.1 lx), so the midnight gap widens to 55.8 points and the 0.3 lx agreement is not preserved. The divergence therefore cannot be attributed to the marker; it is consistent with the absence of any sensor-noise model, IR speckle included, in the current virtual camera. The validated pipeline is directly applicable to the UWB Robotics team's pre-competition preparation and provides a scalable framework for testing autonomous vision systems in logistically constrained space exploration scenarios.
 
 ---
 
@@ -74,7 +74,7 @@ The D435i is modelled in Gazebo Harmonic as a camera sensor within the static ob
 
 #### 2.1.3 ArUco Marker and Trajectory
 
-The ArUco marker (`DICT_7X7_50`, ID 0) is modelled as a 0.20 m × 0.20 m × 0.01 m thin box. It is actuated by publishing `geometry_msgs/Twist` commands to `/model/aruco_target/cmd_vel` from `scripts/fly_square.py`, bridged into Gazebo via `ros_gz_bridge`.
+The ArUco marker (`DICT_7X7_50`, ID 0) is modelled as a 0.20 m × 0.20 m × 0.01 m thin box. Because the physical experiment used a different marker (`DICT_ARUCO_ORIGINAL`, ID 297; §2.2), a second set of worlds (`night_task_*_id297.sdf`) replaces only the texture with that marker, generated with the same 512×512 canvas and 56 px margin; lighting, geometry, camera, and trajectory are unchanged. The ID 297 marker is a 5×5-bit pattern, so at equal physical size its cells are larger than those of the 7×7-bit marker. It is actuated by publishing `geometry_msgs/Twist` commands to `/model/aruco_target/cmd_vel` from `scripts/fly_square.py`, bridged into Gazebo via `ros_gz_bridge`.
 
 The trajectory sweeps two square paths in two parallel planes at different depths, exercising detection at two distances and across the camera's field of view. Each segment runs for a fixed duration of t = 1.3 s at a fixed speed, so displacement follows s = v·t:
 
@@ -151,7 +151,7 @@ Three independent ~30 s trials were recorded per illuminance condition (nine run
 
 ### 2.3 ArUco Detection Pipeline
 
-Detection in both environments uses a common post-processing pipeline (`process_recordings.py`) running OpenCV's `cv2.aruco.detectMarkers`, applied to a grayscale conversion of each frame, with the detector at its OpenCV default parameters. Because the simulated and physical markers use different dictionaries (§2.1.3, §2.2), detection uses `DICT_7X7_50` (ID 0) for simulation footage and `DICT_ARUCO_ORIGINAL` (ID 297) for physical footage. Simulated camera frames are nominally captured at 30 fps; the physical recordings were captured at 15 fps (§2.2), so detection statistics are reported as a per-frame success rate rather than an absolute frame count, to keep the two sources comparable.
+Detection in both environments uses a common post-processing pipeline (`process_recordings.py`) running OpenCV's `cv2.aruco.detectMarkers`, applied to a grayscale conversion of each frame, with the detector at its OpenCV default parameters. Detection uses the dictionary of the marker shown in each recording (§2.1.3, §2.2): `DICT_7X7_50` (ID 0) for the original simulation footage, and `DICT_ARUCO_ORIGINAL` (ID 297) for both the physical footage and the same-marker simulation footage. Simulated camera frames are nominally captured at 30 fps; the physical recordings were captured at 15 fps (§2.2), so detection statistics are reported as a per-frame success rate rather than an absolute frame count, to keep the two sources comparable.
 
 Depth is estimated with `cv2.aruco.estimatePoseSingleMarkers`, using a marker side length of 0.20 m and a camera intrinsic matrix derived analytically from the D435i's rated horizontal field of view (§2.1.2) — not a factory calibration file — scaled to each video's resolution, with zero assumed distortion. Ground truth is a fixed constant, the marker's nominal position (2.0, 0.0, 1.0) m in simulation, or the fixed 2.0 m stand-off in the physical setup; it is **not** read from a live pose topic. Because the marker moves during each run (§2.1.3, §2.2), lateral and vertical error computed against this fixed reference reflect the marker's actual displacement as much as estimation inaccuracy — depth error is therefore the only pose component treated as a systematic-bias measure in this paper (see §4.3 for a full discussion of depth-error reliability in the simulated case).
 
@@ -159,7 +159,7 @@ Depth is estimated with `cv2.aruco.estimatePoseSingleMarkers`, using a marker si
 
 ## 3. Results
 
-*(Five simulation runs and three real-world runs per scenario. Full per-run data in `results/summary/all_scenarios_summary.csv`.)*
+*(Five simulation runs with the original marker, five simulation runs with the physical marker (ID 297), and three real-world runs per scenario. Full per-run data in `results/summary/all_scenarios_summary.csv`.)*
 
 ### 3.1 Detection Success Rate
 
@@ -169,7 +169,7 @@ Detection Success Rate (DSR) is the fraction of processed frames in which `detec
 DSR = (N_detected / N_total) × 100%
 ```
 
-**Table 4.** Detection Success Rate (%), simulation vs. physical, mean ± std dev.
+**Table 4.** Detection Success Rate (%), simulation (original marker) vs. physical, mean ± std dev.
 
 | Scenario | Target lux | Simulation DSR | Physical DSR | Gap (Physical − Sim, pp) |
 |---|---|---|---|---|
@@ -177,7 +177,17 @@ DSR = (N_detected / N_total) × 100%
 | Evening 21:00 | 0.3 lx | 84.0% ± 15.3% | 83.2% ± 4.2% | −0.8 |
 | Midnight 00:00 | 0.1 lx | 80.8% ± 8.3% | 37.8% ± 3.8% | −43.0 |
 
+**Table 4b.** Detection Success Rate (%) with the same marker (`DICT_ARUCO_ORIGINAL`, ID 297) in simulation and physical experiment, alongside the original simulation. Mean ± std dev.
+
+| Scenario | Target lux | Sim, 7×7 ID 0 | Sim, ID 297 | Physical, ID 297 | Marker effect in sim (pp) | Gap (Physical − Sim ID 297, pp) |
+|---|---|---|---|---|---|---|
+| Twilight 19:00 | 3.0 lx | 90.1% ± 6.4% | 95.3% ± 3.3% | 92.3% ± 0.4% | +5.2 | −3.0 |
+| Evening 21:00 | 0.3 lx | 84.0% ± 15.3% | 99.7% ± 0.3% | 83.2% ± 4.2% | +15.7 | −16.4 |
+| Midnight 00:00 | 0.1 lx | 80.8% ± 8.3% | 93.6% ± 5.0% | 37.8% ± 3.8% | +12.8 | −55.8 |
+
 At the two brighter scenarios, simulation and physical detection agree closely — within ±2.2 percentage points at both 3.0 lx and 0.3 lx — despite an order-of-magnitude difference in target illuminance between them. This indicates the simulation is a reliable proxy for physical detection performance at least down to 0.3 lx. At 0.1 lx (Midnight), the two diverge sharply: physical DSR collapses to 37.8% while simulated DSR remains high at 80.8%, a 43.0 percentage-point gap. This is the paper's central Sim-to-Real finding — see §4.4.
+
+Table 4b tests whether the marker difference could account for these gaps. It does not. The ID 297 marker is detected more often than the 7×7 marker in simulation at every light level (+5.2, +15.7, and +12.8 points), most plausibly because its larger cells survive the low resolution (about 450×255 px) of the simulation screencasts better; this explanation was not tested separately. With the identical marker, the Midnight gap widens from 43.0 to 55.8 points, and the near-perfect Evening agreement seen with the original marker (−0.8 points) becomes a 16.4-point gap, part of which the original agreement owed to the harder 7×7 marker and to one low outlier run (`sim_21h_run4`, 55.0%). Only at Twilight do all three conditions agree within about 5 points. Simulated detection with the ID 297 marker is also not monotonic in illuminance (99.7% at 0.3 lx against 95.3% at 3.0 lx, driven by three Twilight runs near 92.5%); the present dataset does not explain this. With five simulated and three physical runs per condition, differences of a few points should not be read as conclusive.
 
 *(An earlier working hypothesis assumed detection would be best at Midnight, reasoning that the spotlight dominates completely once ambient light is negligible, while ambient light at Twilight creates competing glare. The final dataset does not support this: Twilight is the best-performing scenario in both environments, and Midnight the worst, by a wide margin physically. This should not be treated as a valid claim going forward.)*
 
@@ -185,13 +195,13 @@ At the two brighter scenarios, simulation and physical detection agree closely �
 
 **Table 5.** Mean depth error (m), simulation vs. physical, mean ± std dev.
 
-| Scenario | Simulation | Physical |
-|---|---|---|
-| Twilight 19:00 | +1.43 ± 0.20 m | +0.52 ± 0.02 m |
-| Evening 21:00 | +1.37 ± 0.05 m | +0.42 ± 0.01 m |
-| Midnight 00:00 | +1.27 ± 0.07 m | +0.17 ± 0.03 m |
+| Scenario | Simulation (7×7 ID 0) | Simulation (ID 297) | Physical (ID 297) |
+|---|---|---|---|
+| Twilight 19:00 | +1.43 ± 0.20 m | +1.42 ± 0.04 m | +0.52 ± 0.02 m |
+| Evening 21:00 | +1.37 ± 0.05 m | +1.45 ± 0.03 m | +0.42 ± 0.01 m |
+| Midnight 00:00 | +1.27 ± 0.07 m | +1.43 ± 0.05 m | +0.17 ± 0.03 m |
 
-Physical depth error is small, tightly distributed, and *decreases* toward Midnight — the opposite of the "harder to localise in the dark" intuition, and likely explained by the fact that at Midnight only the clearest, highest-contrast detections survive at all (physical DSR is 37.8%; the runs are dominated by close-range, high-confidence detections rather than a representative sample of the full trajectory). Simulated depth error is roughly three times larger and does not track illuminance in any consistent direction. As discussed in §4.3, this is a known artefact of how the simulation footage was recorded and should not be read as a genuine measure of the simulated sensor's pose accuracy. Rotational pose error is not reported: the pipeline has no ground-truth orientation reference, only a fixed-position ground truth, so no rotational error signal currently exists in this dataset.
+Physical depth error is small, tightly distributed, and *decreases* toward Midnight — the opposite of the "harder to localise in the dark" intuition, and likely explained by the fact that at Midnight only the clearest, highest-contrast detections survive at all (physical DSR is 37.8%; the runs are dominated by close-range, high-confidence detections rather than a representative sample of the full trajectory). Simulated depth error is roughly three times larger and does not track illuminance in any consistent direction; the same-marker simulation shows the same offset (+1.42 to +1.45 m), confirming that it comes from the screencast pipeline and not from the marker. As discussed in §4.3, this is a known artefact of how the simulation footage was recorded and should not be read as a genuine measure of the simulated sensor's pose accuracy. Rotational pose error is not reported: the pipeline has no ground-truth orientation reference, only a fixed-position ground truth, so no rotational error signal currently exists in this dataset.
 
 ---
 
@@ -227,15 +237,17 @@ The results in Table 4 define two illuminance regimes for the simulation's predi
 
 The most direct candidate cause is the complete absence of a sensor-noise model in the current camera plugin (§2.1.2): no read noise, no photon shot noise, and critically, none of the D435i's IR-projector speckle pattern that leaks into the RGB channel at sub-lux illuminances in the physical sensor. That speckle is a spatially-correlated, burst-like noise source, distinct from the smoother Gaussian read-noise floor a simple noise model would add — it produces localised false gradients that can either suppress the ArUco corner detector or generate confounding responses near the marker edges, exactly the kind of failure that would explain physical detection collapsing at 0.1 lx while the (noise-free) simulated image remains clean enough to detect reliably. The rig geometry and lighting-model discrepancies noted in §4.1 are plausible secondary contributors but are unlikely to explain a 43-point gap on their own.
 
+Running the simulation with the physical marker (Table 4b) was intended to rule out the marker as a confound, and it does: simulated detection with the identical marker is higher than with the original one at all three light levels, so the gap to the physical data at 0.1 lx grows to 55.8 points rather than shrinking. This removes the marker difference as an explanation and leaves the sensor-noise, lighting, and rig-geometry candidates above. It also means the original conclusion that the simulation is a reliable substitute at 0.3 lx should be read with caution: with the same marker the simulation overestimates detection by 16.4 points at that level, so close agreement was only established at 3.0 lx (within 3.0 points). The remaining differences between the two data sources — screencast resolution (about 450×255 px against 1280×720) and frame rate (30 against 15 fps) — were not controlled in this comparison.
+
 Future work should add an explicit noise model to the camera plugin — starting with a basic Gaussian read-noise term, and ideally extending to a speckle-pattern model parameterised from physical recordings at matched illuminance — and re-run the Midnight scenario to test whether it closes the observed gap.
 
 ---
 
 ## 5. Conclusion
 
-This paper presented a Sim-to-Real methodology for evaluating ArUco marker detection under the extreme low-light conditions of the ERC Night Task. Using ROS2 Jazzy and Gazebo Harmonic with a calibrated Ogre2 rendering pipeline, a parameterised camera and spotlight model was developed to approximate the photometric behaviour of an Intel RealSense D435i across three illuminance scenarios (0.1–3.0 lx). Physical validation at the University of West Bohemia showed that the simulation is a reliable detection proxy at 3.0 lx and 0.3 lx, with DSR divergence within ±2.2 percentage points at both.
+This paper presented a Sim-to-Real methodology for evaluating ArUco marker detection under the extreme low-light conditions of the ERC Night Task. Using ROS2 Jazzy and Gazebo Harmonic with a calibrated Ogre2 rendering pipeline, a parameterised camera and spotlight model was developed to approximate the photometric behaviour of an Intel RealSense D435i across three illuminance scenarios (0.1–3.0 lx). Physical validation at the University of West Bohemia showed that, with the original simulation marker, the simulation tracks physical detection at 3.0 lx and 0.3 lx within ±2.2 percentage points. A follow-up with the identical marker in simulation (`DICT_ARUCO_ORIGINAL`, ID 297) confirmed the agreement at 3.0 lx (−3.0 points) but not at 0.3 lx (−16.4 points), so the simulation's reliability as a detection proxy is established at 3.0 lx and is marker-dependent below it.
 
-At 0.1 lx, simulation systematically overestimates DSR by 43.0 percentage points. The most direct explanation is that the current camera model applies no sensor-noise term at all — the physical camera's read noise, shot noise, and especially its IR-projector speckle pattern are all currently unmodelled — which is now a concrete, actionable target for future simulation work. Depth estimation error, by contrast, is only reliable from the physical dataset in its present form: the simulation's screen-recorded videos carry a resolution-dependent intrinsics bias (§4.3) that should be resolved by recording directly from the ROS image topic before depth error is reported as a precise number in future iterations of this work.
+At 0.1 lx, simulation systematically overestimates DSR, by 43.0 percentage points with the original marker and by 55.8 with the physical marker, which rules out the marker as the cause. The most direct explanation is that the current camera model applies no sensor-noise term at all — the physical camera's read noise, shot noise, and especially its IR-projector speckle pattern are all currently unmodelled — which is now a concrete, actionable target for future simulation work. Depth estimation error, by contrast, is only reliable from the physical dataset in its present form: the simulation's screen-recorded videos carry a resolution-dependent intrinsics bias (§4.3) that should be resolved by recording directly from the ROS image topic before depth error is reported as a precise number in future iterations of this work.
 
 The validated pipeline, world files, and detection code are publicly available in the project repository and directly applicable to the UWB Robotics team's pre-competition preparation, reducing dependency on scarce physical testing time. The methodology generalises to other fiducial marker systems and camera platforms operating in photon-limited environments.
 
