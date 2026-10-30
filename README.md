@@ -135,6 +135,23 @@ docker run -dit --name erc_sim_container \
     erc-night-task bash
 ```
 
+**Laptops with an NVIDIA GPU (recommended):** without GPU access Gazebo falls back to software rendering and the GUI may freeze ("not responding") or never open on Wayland. Requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). Use this `docker run` instead:
+
+```bash
+docker run -dit --name erc_sim_container \
+    --runtime nvidia --gpus all \
+    -e NVIDIA_DRIVER_CAPABILITIES=all \
+    -e DISPLAY=$DISPLAY \
+    -e QT_X11_NO_MITSHM=1 \
+    -e __NV_PRIME_RENDER_OFFLOAD=1 \
+    -e __GLX_VENDOR_LIBRARY_NAME=nvidia \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    -v "$(pwd)/src":/ros2_ws/src \
+    erc-night-task bash
+```
+
+Passing `-r` to `gz sim` (e.g. `gz sim -r <world>.sdf`) starts the simulation immediately, so you do not need to press Play.
+
 ### 1. First-Time Setup: Generate the ArUco Marker
 
 Run this **once** inside the container after first start — the PNG depends on the installed OpenCV version:
